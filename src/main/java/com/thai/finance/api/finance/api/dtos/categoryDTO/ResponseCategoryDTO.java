@@ -1,4 +1,6 @@
 package com.thai.finance.api.finance.api.dtos.categoryDTO;
 
-public record ResponseCategoryDTO(String name) {
+import java.util.UUID;
+
+public record ResponseCategoryDTO(UUID id, String name) {
 }

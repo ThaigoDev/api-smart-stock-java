@@ -1,4 +1,6 @@
 package com.thai.finance.api.finance.api.dtos.supplierDTO;
 
-public record ResponseSupplierDTO(String name) {
+import java.util.UUID;
+
+public record ResponseSupplierDTO(UUID id, String name) {
 }

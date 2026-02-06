@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class SupplierMapper {
     public ResponseSupplierDTO EntityResponseToDTO (Supplier supplierEntity) {
 
-        ResponseSupplierDTO entityConverted =  new ResponseSupplierDTO(supplierEntity.getNameSupplier());
+        ResponseSupplierDTO entityConverted =  new ResponseSupplierDTO(supplierEntity.getId(),supplierEntity.getNameSupplier());
         return  entityConverted;
 
     };

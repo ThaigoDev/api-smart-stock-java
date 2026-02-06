@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class CategoryMapper {
     public  ResponseCategoryDTO EntityResponseToDTO (Category category) {
 
-        ResponseCategoryDTO entityConverted =  new ResponseCategoryDTO(category.getName());
+        ResponseCategoryDTO entityConverted =  new ResponseCategoryDTO(category.getId(),category.getName());
         return  entityConverted;
 
     };

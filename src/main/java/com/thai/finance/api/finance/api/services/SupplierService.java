@@ -6,6 +6,8 @@ import com.thai.finance.api.finance.api.mapper.SupplierMapper;
 import com.thai.finance.api.finance.api.respository.SupplierRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class SupplierService {
     private final SupplierRepository supplierRepository;
@@ -20,5 +22,10 @@ public class SupplierService {
 
          var supplierEntityConverted =  supplierMapper.EntityResponseToDTO(supplierRepository.save(supplierMapper.CreateDtoToEntity(createSupplierDTO)));
         return supplierEntityConverted;
+    };
+
+    public List<ResponseSupplierDTO> getAllSuppliers() {
+        return  supplierRepository.findAll().stream().map(supplier -> supplierMapper.EntityResponseToDTO(supplier)).toList();
+
     };
 }

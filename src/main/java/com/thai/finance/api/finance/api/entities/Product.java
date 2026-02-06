@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -34,6 +35,9 @@ public class Product {
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Stock stock;
 
+    @Column(name = "INITIAL_STOCK")
+    private Integer initialStock;
+
     @Column(name = "STATUS")
     private boolean active = true;
 
@@ -46,7 +50,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(UUID id, String nameProduct, String skuProduct, Integer minimum_stock, Category categoryId, Supplier supplier, Stock stock, boolean active, Instant creationTimestamp, Instant updateTimestamp) {
+    public Product(UUID id, String nameProduct, String skuProduct, Integer minimum_stock, Category categoryId, Supplier supplier, Stock stock, Integer  initialStock,boolean active, Instant creationTimestamp, Instant updateTimestamp) {
         this.id = id;
         this.nameProduct = nameProduct;
         this.skuProduct = skuProduct;
@@ -54,6 +58,7 @@ public class Product {
         this.categoryId = categoryId;
         this.supplier = supplier;
         this.stock = stock;
+        this.initialStock = initialStock;
         this.active = active;
         this.creationTimestamp = creationTimestamp;
         this.updateTimestamp = updateTimestamp;
@@ -137,5 +142,13 @@ public class Product {
 
     public void setUpdateTimestamp(Instant updateTimestamp) {
         this.updateTimestamp = updateTimestamp;
+    }
+
+    public Integer getInitialStock() {
+        return initialStock;
+    }
+
+    public void setInitialStock(Integer initialStock) {
+        this.initialStock = initialStock;
     }
 }
