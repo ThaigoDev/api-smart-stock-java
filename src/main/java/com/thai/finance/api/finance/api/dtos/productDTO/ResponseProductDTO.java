@@ -9,6 +9,7 @@ public record ResponseProductDTO(
         UUID categoryId,
         UUID supplier,
         UUID stock,
+        Integer stockQuantity,
         Integer initialStock,
         Boolean active
 ) {
