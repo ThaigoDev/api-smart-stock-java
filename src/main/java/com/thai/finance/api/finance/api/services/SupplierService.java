@@ -2,11 +2,15 @@ package com.thai.finance.api.finance.api.services;
 
 import com.thai.finance.api.finance.api.dtos.supplierDTO.CreateSupplierDTO;
 import com.thai.finance.api.finance.api.dtos.supplierDTO.ResponseSupplierDTO;
+import com.thai.finance.api.finance.api.dtos.supplierDTO.UpdateSupplierDTO;
 import com.thai.finance.api.finance.api.mapper.SupplierMapper;
 import com.thai.finance.api.finance.api.respository.SupplierRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class SupplierService {
@@ -28,4 +32,15 @@ public class SupplierService {
         return  supplierRepository.findAll().stream().map(supplier -> supplierMapper.EntityResponseToDTO(supplier)).toList();
 
     };
+    public void deleteSupplierById(UUID supplierId) {
+       var supplierExist =    supplierRepository.findById(supplierId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
+        supplierRepository.deleteById(supplierExist.getId());
+    }
+
+    public void updateSupplier(UUID supplierId, UpdateSupplierDTO updateSupplierDTO) {
+        var supplierExist  = supplierRepository.findById(supplierId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Supplier not found"));
+        supplierExist.setNameSupplier(updateSupplierDTO.name());
+        supplierRepository.save(supplierExist);
+
+    }
 }

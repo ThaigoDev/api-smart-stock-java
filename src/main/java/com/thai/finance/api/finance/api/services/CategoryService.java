@@ -5,7 +5,9 @@ import com.thai.finance.api.finance.api.dtos.categoryDTO.ResponseCategoryDTO;
 import com.thai.finance.api.finance.api.entities.Category;
 import com.thai.finance.api.finance.api.mapper.CategoryMapper;
 import com.thai.finance.api.finance.api.respository.CategoryRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,4 +33,10 @@ public class CategoryService {
     public List<ResponseCategoryDTO> getAllCategories() {
          return  categoryRepository.findAll().stream().map(category -> categoryMapper.EntityResponseToDTO(category)).toList();
     };
+
+    public void deleteCategoryById(UUID id) {
+        var categoryExist = categoryRepository.findById(id).orElseThrow(()->  new ResponseStatusException (HttpStatus.NOT_FOUND, "Category not found") );
+        categoryRepository.deleteById(categoryExist.getId());
+
+    }
 }
