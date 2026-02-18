@@ -34,8 +34,6 @@ public class ProductService {
         this.supplierRepository  = supplierRepository;
         this.productMapper = productMapper;
         this.stockRespository = stockRespository;
-
-
     }
 
     public void createProduct(CreateProductDTO createProductDTO) {
