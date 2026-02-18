@@ -1,0 +1,39 @@
+package com.thai.finance.api.finance.api.controllers;
+
+import com.thai.finance.api.finance.api.dtos.stockMovementDTO.CreateStockMovementDTO;
+import com.thai.finance.api.finance.api.dtos.stockMovementDTO.ResponseMovementStockDTO;
+import com.thai.finance.api.finance.api.dtos.stockMovementDTO.UpdateMovementStockDTO;
+import com.thai.finance.api.finance.api.services.StockMovementService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/v1/stockmovement")
+public class StockMovementController {
+    private final StockMovementService stockMovementService;
+
+    public  StockMovementController(StockMovementService stockMovementService) {
+        this.stockMovementService = stockMovementService;
+    }
+    @PostMapping
+    public ResponseEntity<ResponseMovementStockDTO> createStockMovement(@RequestBody  CreateStockMovementDTO createStockMovementDTO) {
+         return  ResponseEntity.accepted().body( stockMovementService.createStockMovement(createStockMovementDTO));
+    }
+    @GetMapping
+    public ResponseEntity<List<ResponseMovementStockDTO>> allStockMovements() {
+        return  ResponseEntity.ok().body(stockMovementService.allStockMovements());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStockMovement(@PathVariable("id") UUID stockMovementId) {
+        stockMovementService.deleteStockMovementById(stockMovementId);
+        return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseMovementStockDTO> putStockMovement(@PathVariable("id") UUID stockMovementId, @RequestBody UpdateMovementStockDTO updateMovementStockDTO) {
+        return ResponseEntity.ok().body(stockMovementService.updateStockMovement(stockMovementId, updateMovementStockDTO));
+    }
+ }
