@@ -29,7 +29,7 @@ public class SupplierService {
     };
 
     public List<ResponseSupplierDTO> getAllSuppliers() {
-        return  supplierRepository.findAll().stream().map(supplier -> supplierMapper.EntityResponseToDTO(supplier)).toList();
+        return  supplierRepository.findAll().stream().map(supplierMapper::EntityResponseToDTO).toList();
 
     };
     public void deleteSupplierById(UUID supplierId) {

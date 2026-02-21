@@ -26,7 +26,7 @@ public class StockService {
     }
 
     public List<ResponseStockDTO> getAllStocks() {
-        return  stockRepository.findAll().stream().map(stock-> stockMapper.entityToResponseDTO(stock)).toList();
+        return  stockRepository.findAll().stream().map(stockMapper::entityToResponseDTO).toList();
     }
 
     public ResponseStockDTO getStockById(UUID stockId) {

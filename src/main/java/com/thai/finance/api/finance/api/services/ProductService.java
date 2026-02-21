@@ -59,7 +59,7 @@ public class ProductService {
     }
 
     public List<ResponseProductDTO> getAllProducts() {
-        var allProductsFinded =  productRepository.findAll().stream().map((product) -> productMapper.EntityResponseToDTO(product)).toList();
+        var allProductsFinded =  productRepository.findAll().stream().map(productMapper::EntityResponseToDTO).toList();
         return allProductsFinded;
     }
 
@@ -89,6 +89,6 @@ public class ProductService {
     }
 
     public List<ResponseProductDTO> findByName(String name) {
-      return   productRepository.findByNameProduct(name).stream().map((product) -> productMapper.EntityResponseToDTO(product)).toList() ;
+      return   productRepository.findByNameProduct(name).stream().map(productMapper::EntityResponseToDTO).toList() ;
     }
 }

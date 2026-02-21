@@ -34,7 +34,7 @@ public class StockMovementService {
     }
 
     public ResponseMovementStockDTO createStockMovement(CreateStockMovementDTO createStockMovementDTO) {
-        if(createStockMovementDTO.productId() ==null) {
+        if(createStockMovementDTO.productId()==null) {
             throw new IllegalArgumentException("priductId is obrigatory");
         }
         Product productFinded =  productRepository.findById(createStockMovementDTO.productId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Product Not Found"));
@@ -43,6 +43,10 @@ public class StockMovementService {
         Stock stockFinded =  stockRespository.findByProduct_Id(productFinded.getId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Stock Not Found"));
 
         if(createStockMovementDTO.type() == MovementType.OUT) {
+            if(createStockMovementDTO.quantity()>= productFinded.getMinimum_stock()) {
+                throw new IllegalArgumentException("not authorized the transaction");
+            }
+
             productFinded.setInitialStock(productFinded.getInitialStock() - createStockMovementDTO.quantity());
             stockFinded.setQuantityProduct(stockFinded.getQuantityProduct() - createStockMovementDTO.quantity());
         }else {
@@ -66,24 +70,27 @@ public class StockMovementService {
 
     public ResponseMovementStockDTO updateStockMovement( UUID id, UpdateMovementStockDTO updateMovementStockDTO) {
         Stock_Movement  stockMovementExist = stockMovementRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Stock Movement not found"));
-        Product productFined =  productRepository.findById(updateMovementStockDTO.productId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prodcut Not found"));
-        Stock stockFinded =  stockRespository.findByProduct_Id(productFined.getId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock not found"));
+        Product productFinded =  productRepository.findById(updateMovementStockDTO.productId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prodcut Not found"));
+        Stock stockFinded =  stockRespository.findByProduct_Id(productFinded.getId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock not found"));
 
         if(updateMovementStockDTO.type() == MovementType.OUT) {
-            productFined.setInitialStock(productFined.getInitialStock() - updateMovementStockDTO.quantity());
+            if( updateMovementStockDTO.quantity()>= productFinded.getMinimum_stock()) {
+                    throw new IllegalArgumentException("not authorized the transaction");
+            }
+            productFinded.setInitialStock(productFinded.getInitialStock() - updateMovementStockDTO.quantity());
             stockFinded.setQuantityProduct(stockFinded.getQuantityProduct() - updateMovementStockDTO.quantity());
         }else {
-            productFined.setInitialStock(productFined.getInitialStock() + updateMovementStockDTO.quantity());
+                productFinded.setInitialStock(productFinded.getInitialStock() + updateMovementStockDTO.quantity());
             stockFinded.setQuantityProduct(stockFinded.getQuantityProduct() + updateMovementStockDTO.quantity());
         }
 
 
-        stockMovementExist.setProduct(productFined);
+        stockMovementExist.setProduct(productFinded);
         stockMovementExist.setType(updateMovementStockDTO.type());
         stockMovementExist.setQuantityMovement(updateMovementStockDTO.quantity());
         stockMovementExist.setUpdateAt(Instant.now());
 
-        productRepository.save(productFined);
+        productRepository.save(productFinded);
         stockRespository.save(stockFinded);
 
         return stockMovementMapper.entityStockMovementToResponseStockMovementDTO(stockMovementRepository.save(stockMovementExist));
