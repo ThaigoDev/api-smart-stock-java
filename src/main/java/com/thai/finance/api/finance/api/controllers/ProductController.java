@@ -37,10 +37,15 @@ public class ProductController {
         return  ResponseEntity.noContent().build();
 
     }
-   @PutMapping("/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Void> putProduct(@PathVariable("id") UUID productId, @RequestBody UpdateProductDTO updateProductDTO) {
         productService.updateProductById(productId, updateProductDTO);
         return ResponseEntity.noContent().build();
    };
+    @GetMapping("/search")
+    public ResponseEntity<List<ResponseProductDTO>> searchProductByName(@RequestParam("name") String name ) {
+        return  ResponseEntity.ok().body(productService.findByName(name));
+
+    }
 
 }

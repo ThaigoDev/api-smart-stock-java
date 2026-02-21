@@ -87,4 +87,8 @@ public class ProductService {
         productRepository.deleteById(productExist.getId());
 
     }
+
+    public List<ResponseProductDTO> findByName(String name) {
+      return   productRepository.findByNameProduct(name).stream().map((product) -> productMapper.EntityResponseToDTO(product)).toList() ;
+    }
 }
