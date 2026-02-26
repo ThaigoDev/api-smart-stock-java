@@ -53,11 +53,11 @@ public class ProductService {
                 Instant.now(),
                 null
         );
-        Stock stock = new Stock(null, productEntity, productEntity.getInitialStock());
-         var stockSaved = stockRespository.save(stock);
 
-        productEntity.setStock(stockSaved);
-        productRepository.save(productEntity);
+        var productSaved = productRepository.save(productEntity);
+        Stock stock = new Stock(null, productSaved, productEntity.getInitialStock());
+        productEntity.setStock(stock);
+
     }
 
     public List<ResponseProductDTO> getAllProducts() {

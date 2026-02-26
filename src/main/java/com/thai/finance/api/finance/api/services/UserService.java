@@ -34,7 +34,7 @@ public class UserService {
     }
 
     public LoginResponseDTO login (LoginRequestDTO loginRequestDTO) {
-     var user = userRepository.findByUsername(loginRequestDTO.username());
+     var user = userRepository.findByEmail(loginRequestDTO.email());
      if(user.isEmpty() || !user.get().isLoginCorrect(loginRequestDTO, passwordEncoder)){
          throw  new BadCredentialsException("User or password is invalid");
      };
@@ -57,13 +57,14 @@ public class UserService {
 
     public void createAccount(CreateAccountRequestDTO createAccountRequestDTO) {
         var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
-        var userFromDB = userRepository.findByUsername(createAccountRequestDTO.username());
+        var userFromDB = userRepository.findByEmail(createAccountRequestDTO.username());
         if(userFromDB.isPresent()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT);
 
         }
         User user = new User();
         user.setUsername(createAccountRequestDTO.username());
+        user.setEmail(createAccountRequestDTO.email());
         user.setPassword(passwordEncoder.encode(createAccountRequestDTO.password()));
         user.setRoles(Set.of(basicRole));
         userRepository.save(user);

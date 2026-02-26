@@ -26,6 +26,7 @@ public class User {
 
     @Column(name = "username")
     private String username;
+    private String email;
     private String password;
    @ManyToMany(cascade =  CascadeType.ALL, fetch = FetchType.EAGER)
    @JoinTable(

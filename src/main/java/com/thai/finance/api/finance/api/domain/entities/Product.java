@@ -39,7 +39,7 @@ public class Product {
     @JoinColumn(name = "SUPPLIER_ID",nullable = false)
     private Supplier supplier;
 
-    @OneToOne(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "product",fetch = FetchType.LAZY)
     private Stock stock;
 
     @Column(name = "INITIAL_STOCK")
