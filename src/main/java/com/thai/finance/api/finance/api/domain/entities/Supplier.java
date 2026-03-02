@@ -1,10 +1,7 @@
 package com.thai.finance.api.finance.api.domain.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,7 +13,6 @@ import java.util.UUID;
 @Table(name = "TB_SUPPLIERS")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Supplier {
@@ -32,5 +28,8 @@ public class Supplier {
 
     @LastModifiedDate
     private LocalDateTime updateAt;
-
+    public Supplier(String nameSupplier) {
+        this.nameSupplier = nameSupplier;
+    }
 }
+

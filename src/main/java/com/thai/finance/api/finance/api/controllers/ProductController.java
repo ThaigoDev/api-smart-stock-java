@@ -4,6 +4,7 @@ import com.thai.finance.api.finance.api.domain.dtos.productDTO.CreateProductDTO;
 import com.thai.finance.api.finance.api.domain.dtos.productDTO.ResponseProductDTO;
 import com.thai.finance.api.finance.api.domain.dtos.productDTO.UpdateProductDTO;
 import com.thai.finance.api.finance.api.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -23,7 +24,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseProductDTO> createProduct(@RequestBody CreateProductDTO createProductDTO) {
+    public ResponseEntity<ResponseProductDTO> createProduct(@RequestBody  @Valid  CreateProductDTO createProductDTO) {
         ResponseProductDTO productCreated = productService.createProduct(createProductDTO);
 
         URI location  = ServletUriComponentsBuilder
@@ -51,7 +52,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> putProduct(@PathVariable("id") UUID productId, @RequestBody UpdateProductDTO updateProductDTO) {
+    public ResponseEntity<Void> putProduct(@PathVariable("id") UUID productId, @RequestBody @Valid UpdateProductDTO updateProductDTO) {
         productService.updateProductById(productId, updateProductDTO);
         return ResponseEntity.noContent().build();
     }

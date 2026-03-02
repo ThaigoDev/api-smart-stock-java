@@ -4,6 +4,7 @@ import com.thai.finance.api.finance.api.domain.dtos.supplierDTO.CreateSupplierDT
 import com.thai.finance.api.finance.api.domain.dtos.supplierDTO.ResponseSupplierDTO;
 import com.thai.finance.api.finance.api.domain.dtos.supplierDTO.UpdateSupplierDTO;
 import com.thai.finance.api.finance.api.services.SupplierService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -22,7 +23,7 @@ public class SupplierController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseSupplierDTO> createSupplier(@RequestBody CreateSupplierDTO createSupplierDTO) {
+    public ResponseEntity<ResponseSupplierDTO> createSupplier(@RequestBody @Valid CreateSupplierDTO createSupplierDTO) {
         var createdSupplier  =  supplierService.createSupplier(createSupplierDTO);
         URI location  = ServletUriComponentsBuilder
                 .fromCurrentRequest().path("{id}")
@@ -42,7 +43,7 @@ public class SupplierController {
 
     }
     @PutMapping("/{id}")
-    public ResponseEntity<Void> putSupplier(@PathVariable("id") UUID supplierId, @RequestBody UpdateSupplierDTO updateSupplierDTO) {
+    public ResponseEntity<Void> putSupplier(@PathVariable("id") UUID supplierId, @RequestBody @Valid UpdateSupplierDTO updateSupplierDTO) {
         supplierService.updateSupplier(supplierId,updateSupplierDTO);
         return ResponseEntity.noContent().build();
     };

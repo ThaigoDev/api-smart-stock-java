@@ -14,7 +14,7 @@ public class SupplierMapper {
 
     };
     public  Supplier CreateDtoToEntity(CreateSupplierDTO createSupplierDTO) {
-         Supplier dtoSupplierConvertedToEntity =  new Supplier(null, createSupplierDTO.name());
+         Supplier dtoSupplierConvertedToEntity =  new Supplier( createSupplierDTO.name());
          return dtoSupplierConvertedToEntity;
     }
 }

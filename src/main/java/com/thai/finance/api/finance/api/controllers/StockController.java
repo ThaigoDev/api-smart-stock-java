@@ -3,6 +3,7 @@ package com.thai.finance.api.finance.api.controllers;
 import com.thai.finance.api.finance.api.domain.dtos.stockDTO.CreateStockDTO;
 import com.thai.finance.api.finance.api.domain.dtos.stockDTO.ResponseStockDTO;
 import com.thai.finance.api.finance.api.services.StockService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -19,7 +20,7 @@ public class StockController {
         this.stockService = stockService;
     }
     @PostMapping
-    public ResponseEntity<ResponseStockDTO> createStock(@RequestBody CreateStockDTO createStockDTO) {
+    public ResponseEntity<ResponseStockDTO> createStock(@RequestBody @Valid CreateStockDTO createStockDTO) {
       var stockCreated = stockService.createStock(createStockDTO);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()

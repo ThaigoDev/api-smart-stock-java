@@ -4,6 +4,7 @@ import com.thai.finance.api.finance.api.domain.dtos.stockMovementDTO.CreateStock
 import com.thai.finance.api.finance.api.domain.dtos.stockMovementDTO.ResponseMovementStockDTO;
 import com.thai.finance.api.finance.api.domain.dtos.stockMovementDTO.UpdateMovementStockDTO;
 import com.thai.finance.api.finance.api.services.StockMovementService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -21,7 +22,7 @@ public class StockMovementController {
         this.stockMovementService = stockMovementService;
     }
     @PostMapping
-    public ResponseEntity<ResponseMovementStockDTO> createStockMovement(@RequestBody  CreateStockMovementDTO createStockMovementDTO) {
+    public ResponseEntity<ResponseMovementStockDTO> createStockMovement(@RequestBody @Valid CreateStockMovementDTO createStockMovementDTO) {
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("{id}")
@@ -41,7 +42,7 @@ public class StockMovementController {
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseMovementStockDTO> putStockMovement(@PathVariable("id") UUID stockMovementId, @RequestBody UpdateMovementStockDTO updateMovementStockDTO) {
+    public ResponseEntity<ResponseMovementStockDTO> putStockMovement(@PathVariable("id") UUID stockMovementId, @RequestBody @Valid UpdateMovementStockDTO updateMovementStockDTO) {
         return ResponseEntity.ok().body(stockMovementService.updateStockMovement(stockMovementId, updateMovementStockDTO));
     }
  }

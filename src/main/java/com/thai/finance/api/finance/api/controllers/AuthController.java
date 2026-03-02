@@ -4,6 +4,8 @@ import com.thai.finance.api.finance.api.domain.dtos.AuthDTO.CreateAccountRequest
 import com.thai.finance.api.finance.api.domain.dtos.AuthDTO.LoginRequestDTO;
 import com.thai.finance.api.finance.api.domain.dtos.AuthDTO.LoginResponseDTO;
 import com.thai.finance.api.finance.api.services.UserService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,12 +24,12 @@ public class AuthController {
     }
 
     @PostMapping
-    public ResponseEntity<LoginResponseDTO> login (@RequestBody LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<LoginResponseDTO> login (@RequestBody @Valid LoginRequestDTO loginRequestDTO) {
      return ResponseEntity.ok(userService.login(loginRequestDTO));
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Void> createAccounnt (@RequestBody CreateAccountRequestDTO createAccountRequestDTO) {
+    public ResponseEntity<Void> createAccounnt (@RequestBody @Valid CreateAccountRequestDTO createAccountRequestDTO) {
 
         userService.createAccount(createAccountRequestDTO);
         return ResponseEntity.ok().build();

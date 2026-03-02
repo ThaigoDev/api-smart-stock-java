@@ -3,6 +3,7 @@ package com.thai.finance.api.finance.api.controllers;
 import com.thai.finance.api.finance.api.domain.dtos.categoryDTO.CreateCategoryDTO;
 import com.thai.finance.api.finance.api.domain.dtos.categoryDTO.ResponseCategoryDTO;
 import com.thai.finance.api.finance.api.services.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -20,7 +21,7 @@ public class CategoryController {
      }
 
     @PostMapping
-    public ResponseEntity<ResponseCategoryDTO> createCategory(@RequestBody CreateCategoryDTO createCategoryDTO) {
+    public ResponseEntity<ResponseCategoryDTO> createCategory(@RequestBody @Valid CreateCategoryDTO createCategoryDTO) {
         var createdCategory =  categoryService.createCategory(createCategoryDTO);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
