@@ -30,7 +30,7 @@ public class CategoryController {
                 .toUri();
         return ResponseEntity.created(location).body(createdCategory);
     };
-     @GetMapping("/all")
+     @GetMapping
     public ResponseEntity<List<ResponseCategoryDTO>> getAllCategories (){
         var allCategories = categoryService.getAllCategories();
         return  ResponseEntity.ok(allCategories);

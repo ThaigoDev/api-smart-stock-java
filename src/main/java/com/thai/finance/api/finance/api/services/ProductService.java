@@ -12,6 +12,8 @@ import com.thai.finance.api.finance.api.respository.CategoryRepository;
 import com.thai.finance.api.finance.api.respository.ProductRepository;
 import com.thai.finance.api.finance.api.respository.StockRespository;
 import com.thai.finance.api.finance.api.respository.SupplierRepository;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -94,7 +96,18 @@ public class ProductService {
 
     }
 
-    public List<ResponseProductDTO> findByName(String name) {
-        return productRepository.findByNameProduct(name).stream().map(productMapper::EntityResponseToDTO).toList();
+    public List<ResponseProductDTO> findByName(String name,String sku, String category) {
+        var ProductExample  = new Product();
+        ProductExample.setNameProduct(name);
+        Category  categoryFinded = categoryRepository.findById(UUID.fromString(category)).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+
+        ProductExample.setCategoryId(categoryFinded);
+        ProductExample.setSkuProduct(sku);
+
+        ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreCase().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+
+        Example<Product>  productExample = Example.of(ProductExample,matcher);
+
+        return productRepository.findAll(productExample).stream().map(productMapper::EntityResponseToDTO).toList();
     }
 }

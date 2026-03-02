@@ -44,14 +44,14 @@ public class ProductController {
         return ResponseEntity.ok(allProducts);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable("id") UUID productId) {
         productService.deleteProductById(productId);
         return ResponseEntity.noContent().build();
 
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("{id}")
     public ResponseEntity<Void> putProduct(@PathVariable("id") UUID productId, @RequestBody @Valid UpdateProductDTO updateProductDTO) {
         productService.updateProductById(productId, updateProductDTO);
         return ResponseEntity.noContent().build();
@@ -59,9 +59,13 @@ public class ProductController {
 
     ;
 
-    @GetMapping("/search")
-    public ResponseEntity<List<ResponseProductDTO>> searchProductByName(@RequestParam("name") String name) {
-        return ResponseEntity.ok().body(productService.findByName(name));
+    @GetMapping("search")
+    public ResponseEntity<List<ResponseProductDTO>> searchProductByName(
+            @RequestParam( value = "name", required = false) String name,
+            @RequestParam(value = "skuProduct", required = false) String sku,
+            @RequestParam(value ="category", required = false) String category
+    ) {
+        return ResponseEntity.ok().body(productService.findByName(name,sku,category));
 
     }
 
