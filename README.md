@@ -1,83 +1,93 @@
-# 📦 Smart Stock — Sistema Inteligente de Gestão de Estoque
+# Smart Stock — Sistema Inteligente de Gestão de Estoque
 
-Sistema de gestão de estoque desenvolvido com **Spring Boot**, focado em **controle eficiente de inventário**, **previsão de ruptura de estoque** e **automação de reposição**.
+## 1. Introdução
 
-O objetivo do projeto é fornecer uma solução moderna para controle de produtos, fornecedores, movimentações e análise inteligente de estoque.
+O **Smart Stock** é um sistema de gestão de estoque desenvolvido utilizando **Spring Boot**, com foco em controle eficiente de inventário, rastreabilidade de movimentações e suporte a funcionalidades analíticas para apoio à tomada de decisão.
 
----
-
-# 🚀 Tecnologias Utilizadas
-
-* Java 21
-* Spring Boot
-* Spring Data JPA
-* MySQL
-* Maven
-* Lombok
-* MapStruct
-* PlantUML
-* Swagger / OpenAPI
+O sistema tem como objetivo fornecer uma solução robusta para gerenciamento de produtos, fornecedores e estoque, além de incorporar funcionalidades inteligentes como previsão de ruptura de estoque e sugestões automatizadas de reposição.
 
 ---
 
-# 🧠 Funcionalidades
+# 2. Tecnologias Utilizadas
 
-## 📦 Funcionalidades Básicas (MVP)
+O sistema foi desenvolvido utilizando as seguintes tecnologias:
+
+* **Java 21**
+* **Spring Boot**
+* **Spring Data JPA**
+* **MySQL**
+* **Maven**
+* **Lombok**
+* **MapStruct**
+* **PlantUML**
+* **Swagger / OpenAPI**
+
+---
+
+# 3. Funcionalidades do Sistema
+
+## 3.1 Funcionalidades Básicas (MVP)
+
+As funcionalidades essenciais do sistema incluem:
 
 * Cadastro de produtos
 * Controle de estoque (entrada e saída)
-* Categorias de produtos
+* Gerenciamento de categorias de produtos
 * Cadastro de fornecedores
-* Usuários e permissões
-* Histórico de movimentações
-* Alerta de estoque mínimo
+* Controle de usuários e permissões
+* Histórico de movimentações de estoque
+* Alertas de estoque mínimo
 
 ---
 
-## ⚙️ Funcionalidades Intermediárias
+## 3.2 Funcionalidades Intermediárias
 
-* Controle por lote e validade
-* Inventário (ajuste manual de estoque)
-* Relatórios:
+O sistema também inclui funcionalidades intermediárias voltadas para melhor controle operacional:
+
+* Controle de produtos por lote e data de validade
+* Inventário com ajuste manual de estoque
+* Geração de relatórios operacionais:
 
   * Produtos mais vendidos
-  * Produtos parados
-  * Estoque crítico
-* Importação e exportação CSV
-* Soft delete (produto inativo)
+  * Produtos com baixa rotatividade
+  * Produtos com estoque crítico
+* Importação e exportação de dados em formato **CSV**
+* Implementação de **soft delete** para produtos inativos
 
 ---
 
-## 🤖 Funcionalidades Inteligentes
+## 3.3 Funcionalidades Inteligentes
 
-* 📉 Previsão de ruptura de estoque
-* 📊 Sugestão automática de reposição
-* 🔔 Alertas automáticos (Email / WhatsApp)
-* 🧠 Classificação ABC de produtos
-* ⏳ Previsão de demanda baseada em histórico
-* 💰 Cálculo automático de custo médio
+Como diferencial, o sistema propõe funcionalidades analíticas e automatizadas:
+
+* Previsão de ruptura de estoque
+* Sugestão automática de reposição
+* Alertas automáticos por e-mail ou WhatsApp
+* Classificação **ABC** de produtos
+* Previsão de demanda baseada em histórico de movimentações
+* Cálculo automático de custo médio de estoque
 
 ---
 
-# 🏗 Arquitetura do Sistema
+# 4. Arquitetura do Sistema
 
-O sistema segue o padrão **Layered Architecture (Arquitetura em Camadas)**.
+O sistema segue o padrão **Layered Architecture (Arquitetura em Camadas)**, amplamente utilizado em aplicações baseadas em **Spring Boot**.
 
-Fluxo da aplicação:
+Fluxo de comunicação entre camadas:
 
 ```
 Client
   ↓
 Controller (API REST)
   ↓
-Service (Regras de Negócio)
+Service (Camada de Regras de Negócio)
   ↓
-Repository (Acesso a dados)
+Repository (Camada de Persistência)
   ↓
 Database
 ```
 
-Estrutura de pacotes:
+Estrutura de pacotes do projeto:
 
 ```
 com.example.stock
@@ -93,11 +103,23 @@ com.example.stock
 └── config
 ```
 
-# 📌 Diagrama de Casos de Uso
+Essa organização promove **separação de responsabilidades**, facilitando manutenção, testes e evolução do sistema.
 
-Representa as interações entre usuários e o sistema.
+---
 
-Exemplos de casos de uso:
+# 5. Diagramas UML
+
+Para documentação da arquitetura e do domínio do sistema, foram elaborados diversos **diagramas UML utilizando PlantUML**.
+
+Esses diagramas auxiliam na compreensão da estrutura, comportamento e implantação da aplicação.
+
+---
+
+# 5.1 Diagrama de Casos de Uso
+
+O diagrama de casos de uso apresenta as interações entre os usuários e o sistema.
+
+Principais casos de uso identificados:
 
 * Cadastrar produto
 * Registrar entrada de estoque
@@ -106,18 +128,15 @@ Exemplos de casos de uso:
 * Realizar inventário
 * Receber alertas de estoque
 
-Imagem do diagrama:
-
-
 <img width="393" height="1449" alt="TP51pjCm48NtFeMNPD4xj8I0kgiImNuKJyC8nnF6uug2E0nYmOeLuWIv64vQf2H_kqhizxqPlUTzL11DlJSUpsgLhL3tKQqZmLQ9Wp7GAeizk9x2_R_g1yzNnFknkKR5tfZ90Q7pQ1lbzjFjsdupPlRQtSw-Ai51L06n9s6Nb8k5M3dInyenWD9beJsUMO9Ynq9GF9JViWHiqR6i_EzGC" src="https://github.com/user-attachments/assets/383918f9-fb92-414e-945b-4c292b2bf3e3" />
 
 ---
 
-# 📌 Diagrama de Classes
+# 5.2 Diagrama de Classes
 
-Representa o **modelo de domínio da aplicação**.
+O diagrama de classes representa o **modelo de domínio da aplicação**, demonstrando as entidades principais e seus relacionamentos.
 
-Principais classes:
+Principais classes do domínio:
 
 * Product
 * Category
@@ -131,18 +150,15 @@ Principais classes:
 * User
 * Role
 
-Imagem do diagrama:
-
-
 <img width="1634" height="545" alt="bLDDRnCn4BtxLrWv8lN0DQTk2OSWIajsW-0uigTRKtyizZWeGlntxA2DMST4wicQUM_cUJxcDX1uYaOp9ZI4m1-zar4G_yMuacl-qTcHSGi6rxmdhx8LNc8n9gz4mkxKk46X36Z6ZRBAHDEJ4ozhlhM48th6GP0wPAfp6i6otxFaEqWCvu_ND2K6uTL4ojdPMHBqSPgqGdyj0HfGkfZJi" src="https://github.com/user-attachments/assets/a3bda1c6-f760-4f8a-bb2c-563ad60aee77" />
 
 ---
 
-# 📌 Diagrama Entidade-Relacionamento (ER)
+# 5.3 Diagrama Entidade-Relacionamento (ER)
 
-Representa a **estrutura do banco de dados**.
+O diagrama entidade-relacionamento descreve a **estrutura lógica do banco de dados** utilizado pela aplicação.
 
-Principais relacionamentos:
+Principais relacionamentos identificados:
 
 * Product → Category
 * Product → Supplier
@@ -150,14 +166,13 @@ Principais relacionamentos:
 * Stock → StockMovement
 * User → Role
 
-Imagem do diagrama:
-
-
 <img width="1435" height="578" alt="fLJDRjim3BxxANmlyW8xrSk2BK3J56csgy5PRAfLiZoHoX0iUVT9iQTKLhCbwCMmFlxmqoUIjyHWsMbL5DYov5tvO8rm3PU_YxAyaQByK7wSVvxVh_rnCl6V5ZHwy5krcdwfLXwW5vUSEokRuF5fDfqlgZkFQDbAxNHDR9eNR-cpGSDoYo7_Sdatg-uzr03ZnjXTdTObrtLAeatWGsGy7" src="https://github.com/user-attachments/assets/e95f9953-21a8-4f6f-b320-ee7e05ba757e" />
 
-# 📌 Diagrama de Arquitetura
+---
 
-Representa a organização do sistema em camadas.
+# 5.4 Diagrama de Arquitetura
+
+O diagrama de arquitetura apresenta a organização do sistema em camadas.
 
 ```
 Frontend
@@ -171,18 +186,13 @@ Repositories
 Database
 ```
 
-Imagem do diagrama:
-
-
 <img width="3105" height="496" alt="arqui" src="https://github.com/user-attachments/assets/f2840fba-df17-461d-a69c-a77bde30ee0c" />
 
 ---
 
-# 📌 Diagrama de Implantação (Deployment)
+# 5.5 Diagrama de Implantação (Deployment)
 
-Mostra onde o sistema será executado.
-
-Infraestrutura prevista:
+O diagrama de implantação descreve a infraestrutura necessária para execução do sistema.
 
 ```
 Client (Browser)
@@ -194,15 +204,13 @@ Database Server (MySQL)
 External Services (Email / WhatsApp API)
 ```
 
-Imagem do diagrama:
-
 <img width="1193" height="501" alt="VP1DJiCm48NtFiN8-ueReBQqYqg0W0XrFKs6Oidn1C-47w4U1h7eGN8n72KiWYDscNmlxxsyfIX6RMjlZ3hr11k7nuWrGaMmgnkFGR4xTzyC2oYSA0reAyelBHaJE5tsKThkApgsy6a0IguR3XGKx3hocr242zZJ0LPDOytfzwE2ugkhE2Q_HBmhXw3UOsfIDD658woP5LPtkr4maLnnq" src="https://github.com/user-attachments/assets/96671b4b-5e37-4c23-9bd8-0105441cc69e" />
 
 ---
 
-# 📂 Modelo de Domínio
+# 6. Modelo de Domínio
 
-Entidades principais do sistema:
+O modelo de domínio do sistema é composto pelas seguintes entidades principais:
 
 * Product
 * Category
@@ -216,19 +224,19 @@ Entidades principais do sistema:
 * User
 * Role
 
-Essas entidades representam o **núcleo do sistema de estoque**.
+Essas entidades representam os principais elementos necessários para o gerenciamento completo do estoque.
 
 ---
 
-# ⚙️ Regras de Negócio
+# 7. Regras de Negócio
 
-Algumas regras importantes do sistema:
+O sistema implementa algumas regras de negócio fundamentais para garantir consistência dos dados e confiabilidade das operações:
 
 * O sistema **não permite estoque negativo**
 * Toda movimentação gera **registro no histórico**
 * Ajustes de estoque exigem **motivo**
-* Produtos **inativos não podem movimentar estoque**
-* Alertas são gerados quando:
+* Produtos **inativos não podem realizar movimentações**
+* Alertas são gerados automaticamente quando:
 
 ```
 quantity <= minimumStock
@@ -236,22 +244,22 @@ quantity <= minimumStock
 
 ---
 
-# 📈 Evoluções Futuras
+# 8. Evoluções Futuras
 
-Possíveis melhorias para o sistema:
+Entre as possíveis evoluções do sistema, destacam-se:
 
-* Autenticação com **JWT + Spring Security**
-* **Docker Compose** (API + MySQL + Redis)
-* Cache com Redis
-* Dashboard com gráficos analíticos
-* Integração com sistemas ERP
-* API pública para integrações externas
+* Implementação de autenticação utilizando **JWT e Spring Security**
+* Containerização da aplicação com **Docker Compose**
+* Utilização de **Redis para cache**
+* Desenvolvimento de **dashboard analítico com gráficos**
+* Integração com sistemas **ERP**
+* Disponibilização de **API pública para integrações externas**
 
 ---
 
-# ▶️ Como Rodar o Projeto
+# 9. Execução do Projeto
 
-## 1. Clonar o repositório
+## 9.1 Clonando o repositório
 
 ```
 git clone https://github.com/seu-usuario/smart-stock.git
@@ -259,9 +267,9 @@ git clone https://github.com/seu-usuario/smart-stock.git
 
 ---
 
-## 2. Criar banco de dados
+## 9.2 Criação do banco de dados
 
-Criar banco no MySQL:
+Criar um banco de dados no **MySQL** com o nome:
 
 ```
 smart_stock
@@ -269,7 +277,7 @@ smart_stock
 
 ---
 
-## 3. Configurar application.properties
+## 9.3 Configuração do arquivo application.properties
 
 ```
 spring.datasource.url=jdbc:mysql://localhost:3306/smart_stock
@@ -281,13 +289,15 @@ spring.jpa.hibernate.ddl-auto=update
 
 ---
 
-## 4. Rodar a aplicação
+## 9.4 Execução da aplicação
+
+Executar o comando:
 
 ```
 mvn spring-boot:run
 ```
 
-A API estará disponível em:
+Após a inicialização, a API estará disponível em:
 
 ```
 http://localhost:8080
@@ -295,7 +305,6 @@ http://localhost:8080
 
 ---
 
-# 📄 Licença
+# 10. Licença
 
-Projeto desenvolvido para **fins educacionais e de aprendizado em arquitetura de software e desenvolvimento backend com Spring Boot**.
-
+Este projeto foi desenvolvido para **fins educacionais**, com o objetivo de estudo de **arquitetura de software, modelagem UML e desenvolvimento backend com Spring Boot**.
