@@ -1,4 +1,4 @@
-![deploy diagrama](https://github.com/user-attachments/assets/e761dae5-b233-4246-977a-09b38609625b)![arquiteture](https://github.com/user-attachments/assets/46b3c328-9cea-4da0-90d5-250acc46f210)![erent](https://github.com/user-attachments/assets/af87ac28-48d7-476a-a5e9-2ec260ae28fd)![diagrama-classes](https://github.com/user-attachments/assets/f5816e5f-03fe-41c9-9a67-e1ebf71ed0a8)![usecases](https://github.com/user-attachments/assets/a8238576-fb5d-4070-8796-a3d3e0049ccc)# Smart Stock — Sistema Inteligente de Gestão de Estoque
+![deploy diagrama](https://github.com/usuario-attachments/assets/e761dae5-b233-4246-977a-09b38609625b)![arquiteture](https://github.com/usuario-attachments/assets/46b3c328-9cea-4da0-90d5-250acc46f210)![erent](https://github.com/usuario-attachments/assets/af87ac28-48d7-476a-a5e9-2ec260ae28fd)![diagrama-classes](https://github.com/usuario-attachments/assets/f5816e5f-03fe-41c9-9a67-e1ebf71ed0a8)![usecases](https://github.com/usuario-attachments/assets/a8238576-fb5d-4070-8796-a3d3e0049ccc)# Smart Stock — Sistema Inteligente de Gestão de Estoque
 
 ## 1. Introdução
 
@@ -90,7 +90,7 @@ Database
 Estrutura de pacotes do projeto:
 
 ```
-com.example.stock
+com.example.estoque
 │
 ├── controller
 ├── service
@@ -267,7 +267,7 @@ Entre as possíveis evoluções do sistema, destacam-se:
 ## 9.1 Clonando o repositório
 
 ```
-git clone https://github.com/seu-usuario/smart-stock.git
+git clone https://github.com/seu-usuario/smart-estoque.git
 ```
 
 ---

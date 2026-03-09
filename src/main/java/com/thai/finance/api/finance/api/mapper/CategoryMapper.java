@@ -1,14 +1,14 @@
 package com.thai.finance.api.finance.api.mapper;
 
-import com.thai.finance.api.finance.api.domain.dtos.categoryDTO.ResponseCategoryDTO;
-import com.thai.finance.api.finance.api.domain.entities.Category;
+import com.thai.finance.api.finance.api.domain.dtos.CategoriaDTO.CategoriaRespostaDTO;
+import com.thai.finance.api.finance.api.domain.entities.Categoria;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CategoryMapper {
-    public  ResponseCategoryDTO EntityResponseToDTO (Category category) {
+    public CategoriaRespostaDTO EntityResponseToDTO (Categoria categoria) {
 
-        ResponseCategoryDTO entityConverted =  new ResponseCategoryDTO(category.getId(),category.getName());
+        CategoriaRespostaDTO entityConverted =  new CategoriaRespostaDTO(categoria.getId(), categoria.getName());
         return  entityConverted;
 
     };
