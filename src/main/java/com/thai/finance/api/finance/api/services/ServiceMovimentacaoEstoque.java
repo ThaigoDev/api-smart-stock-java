@@ -38,7 +38,7 @@ public class ServiceMovimentacaoEstoque {
         Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
         System.out.println(estoqueEncontrado.getProduto().getNome());
         if (movimentacaoEstoqueRequisicaoDTO.tipo() == TipoMovimentacaoEstoque.SAIDA) {
-            if (movimentacaoEstoqueRequisicaoDTO.quantidade() > produtoEncontrado.getEstoque_minimo() ) {
+            if (movimentacaoEstoqueRequisicaoDTO.quantidade() > (estoqueEncontrado.getQuantidade() - produtoEncontrado.getEstoque_minimo()) ) {
                 throw new IllegalArgumentException("Movimentação não autorizada,  a quantidade é maior que o estoque mínimo do produto" + produtoEncontrado.getNome());
             }
 
