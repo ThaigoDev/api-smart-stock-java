@@ -23,13 +23,13 @@ public class Funcao {
     private String nome;
 
     public enum Values {
-        BASIC(1L),
+        USUARIO(1L),
         ADMIN (2L);
         long funcaoId;
         Values(Long funcaoId) {
             this.funcaoId = funcaoId;
         }
-        public long getRoleId() {
+        public long getFuncaoId() {
             return funcaoId;
         }
     }
