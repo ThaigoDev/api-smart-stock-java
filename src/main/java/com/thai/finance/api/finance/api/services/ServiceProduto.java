@@ -31,62 +31,58 @@ public class ServiceProduto {
     private final MapperProduto mapper;
 
 
-    public ProdutoRespostaDTO createProduct(ProdutoRequisicaoDTO produtoRequisicaoDTO) {
-        Categoria categoriaFinded = repositoryCategoria.findById(produtoRequisicaoDTO.categoria_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
-        Fornecedor fornecedorFinded = repositoryFornecedor.findById(produtoRequisicaoDTO.fornecedor_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
+    public ProdutoRespostaDTO salvar(ProdutoRequisicaoDTO produtoRequisicaoDTO) {
+        Categoria categoriaEncontrada = repositoryCategoria.findById(produtoRequisicaoDTO.categoria_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria Encontrada"));
+        Fornecedor fornecedorEncontrado = repositoryFornecedor.findById(produtoRequisicaoDTO.fornecedor_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fornecedor Encontrado"));
 
-        var ProductEntity = mapper.dtoToEntity(produtoRequisicaoDTO);
-        ProductEntity.setFornecedor(fornecedorFinded);
-        ProductEntity.setCategoryId(categoriaFinded);
-        var productSaved = repositoryProduto.save(ProductEntity);
-        Estoque estoque = new Estoque(null, productSaved, ProductEntity.getInitialStock());
-        ProductEntity.setStock(estoque);
+        var EntidadeProduto = mapper.dtoToEntity(produtoRequisicaoDTO);
+        EntidadeProduto.setFornecedor(fornecedorEncontrado);
+        EntidadeProduto.setCategoria(categoriaEncontrada);
+        var produtoSalvo = repositoryProduto.save(EntidadeProduto);
+        Estoque EntidadeEstoque = new Estoque(null, produtoSalvo, EntidadeProduto.getEstoque_minimo());
 
-        return mapper.entityToDTO(productSaved);
+        return mapper.entityToDTO(produtoSalvo);
 
     }
 
-    public List<ProdutoRespostaDTO> getAllProducts() {
+    public List<ProdutoRespostaDTO> obter() {
         return repositoryProduto.findAll().stream().map(mapper::entityToDTO).toList();
     }
 
-    public void updateProductById(UUID productId, EditarProdutoRequisicaoDTO editarProdutoRequisicaoDTO) {
-        var productExist = repositoryProduto.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+    public void atualizar(UUID produto_id, ProdutoRequisicaoDTO produtoRequisicaoDTO) {
+        var produtoEcontrado = repositoryProduto.findById(produto_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
 
-        Categoria categoria = repositoryCategoria.findById(editarProdutoRequisicaoDTO.categoryId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
-        Fornecedor fornecedor = repositoryFornecedor.findById(editarProdutoRequisicaoDTO.supplier()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
+        Categoria categoriaEncontrada = repositoryCategoria.findById(produtoRequisicaoDTO.categoria_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+        Fornecedor fornecedorEncontrado = repositoryFornecedor.findById(produtoRequisicaoDTO.fornecedor_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fornecedor não encontrado"));
 
-        Estoque estoque = repositoryEstoque.findById(editarProdutoRequisicaoDTO.stock()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock not found"));
 
-        productExist.setNameProduct(editarProdutoRequisicaoDTO.nameProduct());
-        productExist.setSkuProduct(editarProdutoRequisicaoDTO.skuProduct());
-        productExist.setMinimum_stock(editarProdutoRequisicaoDTO.minimum_stock());
-        productExist.setCategoryId(categoria);
-        productExist.setSupplier(fornecedor);
-        productExist.setStock(estoque);
-        productExist.setInitialStock(editarProdutoRequisicaoDTO.initialStock());
-        productExist.setActive(editarProdutoRequisicaoDTO.active());
-        repositoryProduto.save(productExist);
+        produtoEcontrado.setNome(produtoRequisicaoDTO.nome());
+        produtoEcontrado.setSku(produtoRequisicaoDTO.sku());
+        produtoEcontrado.setEstoque_minimo(produtoRequisicaoDTO.estoque_minimo());
+        produtoEcontrado.setCategoria(categoriaEncontrada);
+        produtoEcontrado.setFornecedor(fornecedorEncontrado);
+        produtoEcontrado.setAtivo(produtoRequisicaoDTO.ativo());
+        repositoryProduto.save(produtoEcontrado);
     }
 
-    public void deleteProductById(UUID productId) {
+    public void remover(UUID productId) {
         Produto produtoExist = repositoryProduto.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
         repositoryProduto.deleteById(produtoExist.getId());
 
     }
 
-    public List<ProdutoRespostaDTO> findByName(String name, String sku, String category) {
-        var ProductExample = new Produto();
-        ProductExample.setNameProduct(name);
-        Categoria categoriaFinded = repositoryCategoria.findById(UUID.fromString(category)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+    public List<ProdutoRespostaDTO> buscar(String nome, String sku, String categoria) {
+        var ExemploProduto = new Produto();
+        ExemploProduto.setNome(nome);
+        Categoria categoriaEncontrada = repositoryCategoria.findById(UUID.fromString(categoria)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
 
-        ProductExample.setCategoryId(categoriaFinded);
-        ProductExample.setSkuProduct(sku);
+        ExemploProduto.setCategoria(categoriaEncontrada);
+        ExemploProduto.setSku(sku);
 
         ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreCase().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
 
-        Example<Produto> productExample = Example.of(ProductExample, matcher);
+        Example<Produto> produtoExemplo = Example.of(ExemploProduto, matcher);
 
-        return repositoryProduto.findAll(productExample).stream().map(mapper::entityToDTO).toList();
+        return repositoryProduto.findAll(produtoExemplo).stream().map(mapper::entityToDTO).toList();
     }
 }
