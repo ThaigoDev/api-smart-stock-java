@@ -24,13 +24,13 @@ public class ControllerAuth {
 
     @PostMapping
     public ResponseEntity<LoginRespostaDTO> login (@RequestBody @Valid LoginRequisicaoDTO loginRequisicaoDTO) {
-     return ResponseEntity.ok(serviceUsuario.login(loginRequisicaoDTO));
+     return ResponseEntity.ok(serviceUsuario.autenticar(loginRequisicaoDTO));
     }
 
     @PostMapping("/signup")
     public ResponseEntity<Void> criarConta (@RequestBody @Valid CriarContaRequisicaoDTO criarContaRequisicaoDTO) {
 
-        serviceUsuario.createAccount(criarContaRequisicaoDTO);
+        serviceUsuario.salvar(criarContaRequisicaoDTO);
         return ResponseEntity.ok().build();
     }
 

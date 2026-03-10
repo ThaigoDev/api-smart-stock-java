@@ -34,41 +34,41 @@ public class ServiceUsuario {
         this.repositoryFuncao = repositoryFuncao;
     }
 
-    public LoginRespostaDTO login(LoginRequisicaoDTO loginRequisicaoDTO) {
-        var user = repositoryUsuario.findByEmail(loginRequisicaoDTO.email());
-        if (user.isEmpty() || !user.get().isLoginCorrect(loginRequisicaoDTO, passwordEncoder)) {
-            throw new BadCredentialsException("User or password is invalid");
+    public LoginRespostaDTO autenticar(LoginRequisicaoDTO loginRequisicaoDTO) {
+        var usuario = repositoryUsuario.findByEmail(loginRequisicaoDTO.email());
+        if (usuario.isEmpty() || !usuario.get().isLoginCorrect(loginRequisicaoDTO, passwordEncoder)) {
+            throw new BadCredentialsException("Usuário ou senha inválidos");
         }
         ;
-        var expiresIn = 1000L;
-        Instant now = Instant.now();
-        var scopes = user.get().getFuncaos().stream().map(Funcao::getName).collect(Collectors.joining(" "));
+        var expiraEm = 1000L;
+        Instant horarioAtual = Instant.now();
+        var scopes = usuario.get().getFuncoes().stream().map(Funcao::getNome).collect(Collectors.joining(" "));
         var claims = JwtClaimsSet.builder().issuer("mybackend")
                 .subject(
-                        user.get().getUserId().toString()
+                        usuario.get().getId().toString()
                 )
-                .expiresAt(now.plusSeconds(expiresIn))
-                .issuedAt(now)
+                .expiresAt(horarioAtual.plusSeconds(expiraEm))
+                .issuedAt(horarioAtual)
                 .claim("scope", scopes)
                 .build();
 
         var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-        return new LoginRespostaDTO(jwtValue, expiresIn);
+        return new LoginRespostaDTO(jwtValue, expiraEm);
 
     }
 
-    public void createAccount(CriarContaRequisicaoDTO criarContaRequisicaoDTO) {
-        var basicRole = repositoryFuncao.findByName(Funcao.Values.BASIC.name());
-        var userFromDB = repositoryUsuario.findByEmail(criarContaRequisicaoDTO.username());
-        if (userFromDB.isPresent()) {
+    public void salvar(CriarContaRequisicaoDTO criarContaRequisicaoDTO) {
+        var funcaoBasica = repositoryFuncao.findByName(Funcao.Values.BASIC.name());
+        var usuarioDoBanco = repositoryUsuario.findByEmail(criarContaRequisicaoDTO.nome());
+        if (usuarioDoBanco.isPresent()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT);
 
         }
         Usuario usuario = new Usuario();
-        usuario.setUsername(criarContaRequisicaoDTO.username());
+        usuario.setNome(criarContaRequisicaoDTO.nome());
         usuario.setEmail(criarContaRequisicaoDTO.email());
-        usuario.setPassword(passwordEncoder.encode(criarContaRequisicaoDTO.password()));
-        usuario.setFuncaos(Set.of(basicRole));
+        usuario.setSenha(passwordEncoder.encode(criarContaRequisicaoDTO.senha()));
+        usuario.setFuncoes(Set.of(funcaoBasica));
         repositoryUsuario.save(usuario);
     }
 }
