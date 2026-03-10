@@ -6,8 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record EstoqueRequisicaoDTO(
-        @NotNull(message = "the propriety 'product' cannot be null ")
+        @NotNull(message = "O campo 'produto' não pode ser null")
         UUID produto,
-        @NotNull(message = "the propriety 'quantity' cannot be null ")
-        Integer quantityProduct) {
+        @NotNull(message = "O campo 'quantidade' não pode ser null")
+        Integer quantidade) {
 }

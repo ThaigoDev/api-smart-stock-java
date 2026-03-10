@@ -31,7 +31,7 @@ public class ControllerMovimentacaoEstoque {
                 .buildAndExpand(estoqueCriado.id())
                 .toUri();
 
-         return  ResponseEntity.created(location).body(estoqueCriado );
+         return  ResponseEntity.created(location).body(estoqueCriado);
     }
     @GetMapping
     public ResponseEntity<List<MovimentacaoEstoqueRespostaDTO>> obterMovimentacoesEstoques() {

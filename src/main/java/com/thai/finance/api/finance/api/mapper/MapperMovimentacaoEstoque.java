@@ -8,10 +8,9 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface MapperMovimentacaoEstoque {
-
-    @Mapping(target = "produto.id", source = "produto")
+    @Mapping(target ="produto", ignore = true)
     MovimentacaoEstoque paraEntidade(MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO);
-    @Mapping(target = "produto", source = "produto.id")
+    @Mapping(target = "produto_id", source = "produto.id")
     MovimentacaoEstoqueRespostaDTO paraDTO(MovimentacaoEstoque movimentacaoEstoque);
 
 }

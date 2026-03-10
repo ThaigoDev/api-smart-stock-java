@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public record MovimentacaoEstoqueRequisicaoDTO(
         @NotNull(message = "O campo 'produto' não pode ser null")
-        UUID produto,
+        UUID produto_id,
 
         @NotNull(message = "O campo 'tipo' não pode ser null")
         TipoMovimentacaoEstoque tipo,

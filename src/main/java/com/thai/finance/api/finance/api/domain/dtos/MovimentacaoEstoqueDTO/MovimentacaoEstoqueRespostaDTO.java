@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record MovimentacaoEstoqueRespostaDTO(
         UUID id,
-        UUID produto,
+        UUID produto_id,
         TipoMovimentacaoEstoque tipo,
         Integer quantidade,
         String motivo,

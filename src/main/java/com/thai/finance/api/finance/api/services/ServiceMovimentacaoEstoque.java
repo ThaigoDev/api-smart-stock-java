@@ -26,15 +26,17 @@ public class ServiceMovimentacaoEstoque {
     private final MapperMovimentacaoEstoque mapper;
 
     public MovimentacaoEstoqueRespostaDTO salvar(MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO) {
-        if (movimentacaoEstoqueRequisicaoDTO.produto() == null) {
+        if (movimentacaoEstoqueRequisicaoDTO.produto_id() == null) {
             throw new IllegalArgumentException("Produto é obrigatório");
         }
 
-        Produto produtoEncontrado = repositoryProduto.findById(movimentacaoEstoqueRequisicaoDTO.produto()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        Produto produtoEncontrado = repositoryProduto.findById(movimentacaoEstoqueRequisicaoDTO.produto_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        System.out.println(produtoEncontrado.getNome());
         MovimentacaoEstoque movimentacaoEstoqueEntidade = mapper.paraEntidade(movimentacaoEstoqueRequisicaoDTO);
-
-        Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
-
+        movimentacaoEstoqueEntidade.setProduto(produtoEncontrado);
+        System.out.println(movimentacaoEstoqueEntidade.getProduto().getNome());
+        Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
+        System.out.println(estoqueEncontrado.getProduto().getNome());
         if (movimentacaoEstoqueRequisicaoDTO.tipo() == TipoMovimentacaoEstoque.SAIDA) {
             if (movimentacaoEstoqueRequisicaoDTO.quantidade() >= produtoEncontrado.getEstoque_minimo()) {
                 throw new IllegalArgumentException("Movimentação não autorizada,  a quantidade é maior que o estoque mínimo do produto" + produtoEncontrado.getNome());
@@ -44,10 +46,8 @@ public class ServiceMovimentacaoEstoque {
         } else {
             estoqueEncontrado.setQuantidade(estoqueEncontrado.getQuantidade() + movimentacaoEstoqueRequisicaoDTO.quantidade());
         }
-        repositoryProduto.save(produtoEncontrado);
         repositoryEstoque.save(estoqueEncontrado);
 
-        movimentacaoEstoqueEntidade.setProduto(produtoEncontrado);
         return mapper.paraDTO(repositoryMovimentacaoEstoque.save(movimentacaoEstoqueEntidade));
     }
 
@@ -61,8 +61,8 @@ public class ServiceMovimentacaoEstoque {
 
     public MovimentacaoEstoqueRespostaDTO atualizar(UUID movimentacaoEstoque_id, MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO) {
         MovimentacaoEstoque movimentacaoEstoqueEncontrada = repositoryMovimentacaoEstoque.findById(movimentacaoEstoque_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movimentação de Estoque não encontrada"));
-        Produto produtoEncontrado = repositoryProduto.findById(movimentacaoEstoqueRequisicaoDTO.produto()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
-        Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
+        Produto produtoEncontrado = repositoryProduto.findById(movimentacaoEstoqueRequisicaoDTO.produto_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
 
         if (movimentacaoEstoqueRequisicaoDTO.tipo() == TipoMovimentacaoEstoque.SAIDA) {
             if (movimentacaoEstoqueRequisicaoDTO.quantidade() >= produtoEncontrado.getEstoque_minimo()) {

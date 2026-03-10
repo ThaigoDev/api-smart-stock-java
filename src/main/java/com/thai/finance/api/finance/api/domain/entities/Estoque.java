@@ -26,7 +26,6 @@ public class Estoque {
     @JoinColumn(nullable = true)
     private Produto produto;
 
-    @Column(name= "QUANTITY")
     private Integer quantidade;
 
     @CreatedDate

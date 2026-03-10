@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/stock")
+@RequestMapping("estoques")
 @RequiredArgsConstructor
 public class ControllerEstoque {
-    private ServiceEstoque serviceEstoque;
+    private final ServiceEstoque serviceEstoque;
 
     @PostMapping
     public ResponseEntity<EstoqueRespostaDTO> salvarEstoque(@RequestBody @Valid EstoqueRequisicaoDTO estoqueRequisicaoDTO) {
