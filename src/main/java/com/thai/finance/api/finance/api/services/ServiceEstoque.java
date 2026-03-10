@@ -1,7 +1,7 @@
 package com.thai.finance.api.finance.api.services;
 
-import com.thai.finance.api.finance.api.domain.dtos.stockDTO.CreateStockDTO;
-import com.thai.finance.api.finance.api.domain.dtos.stockDTO.ResponseStockDTO;
+import com.thai.finance.api.finance.api.domain.dtos.EstoqueDTO.EstoqueRequisicaoDTO;
+import com.thai.finance.api.finance.api.domain.dtos.EstoqueDTO.EstoqueRespostaDTO;
 import com.thai.finance.api.finance.api.mapper.StockMapper;
 import com.thai.finance.api.finance.api.respository.RepositoryEstoque;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +18,15 @@ public class ServiceEstoque {
     private final RepositoryEstoque stockRepository;
     private final StockMapper stockMapper;
 
-    public ResponseStockDTO createStock(CreateStockDTO createStockDTO) {
-        return stockMapper.entityToResponseDTO(stockRepository.save(stockMapper.createStockDTOtoEntity(createStockDTO)));
+    public EstoqueRespostaDTO salvar(EstoqueRequisicaoDTO estoqueRequisicaoDTO) {
+        return stockMapper.entityToResponseDTO(stockRepository.save(stockMapper.createStockDTOtoEntity(estoqueRequisicaoDTO)));
     }
 
-    public List<ResponseStockDTO> getAllStocks() {
+    public List<EstoqueRespostaDTO> obter() {
         return stockRepository.findAll().stream().map(stockMapper::entityToResponseDTO).toList();
     }
 
-    public ResponseStockDTO getStockById(UUID stockId) {
-        return stockMapper.entityToResponseDTO(stockRepository.findById(stockId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Stock not Found")));
+    public EstoqueRespostaDTO obterPorId(UUID estoque_id) {
+        return stockMapper.entityToResponseDTO(stockRepository.findById(estoque_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado")));
     }
 }
