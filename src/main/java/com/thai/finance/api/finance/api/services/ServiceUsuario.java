@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -70,5 +71,13 @@ public class ServiceUsuario {
         usuario.setSenha(passwordEncoder.encode(criarContaRequisicaoDTO.senha()));
         usuario.setFuncoes(Set.of(funcaoBasica));
         repositoryUsuario.save(usuario);
+    }
+
+    public Usuario obterPorNome(String nome) {
+      return  repositoryUsuario.findByNome(nome);
+    }
+
+    public Optional<Usuario> obterPorEmail(String email) {
+     return repositoryUsuario.findByEmail(email);
     }
 }

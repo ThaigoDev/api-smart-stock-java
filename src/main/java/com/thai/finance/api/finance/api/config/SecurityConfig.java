@@ -4,6 +4,7 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.thai.finance.api.finance.api.security.ManipuladorLoginSocial;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -34,14 +36,14 @@ public class SecurityConfig {
     private RSAPrivateKey privateKey;
 
     @Bean
-    public SecurityFilterChain securityFilterChain (HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain (HttpSecurity http, ManipuladorLoginSocial manipuladorLoginSocial) {
        return http.authorizeHttpRequests( authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
                 .anyRequest().permitAll()
         ).csrf(csrf -> csrf.disable())
                 .oauth2ResourceServer( auth -> auth.jwt(Customizer.withDefaults()))
                 .sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-               .oauth2Login(Customizer.withDefaults())
+               .oauth2Login(oauth2 -> oauth2.successHandler(manipuladorLoginSocial))
                .httpBasic(Customizer.withDefaults())
                .formLogin(Customizer.withDefaults())
                .build();
@@ -51,6 +53,11 @@ public class SecurityConfig {
         JWK jwk = new RSAKey.Builder(this.publicKey).privateKey(this.privateKey).build();
          var jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
          return new NimbusJwtEncoder(jwks);
+    }
+
+    @Bean
+    public GrantedAuthorityDefaults grantedAuthorityDefaults () {
+        return  new GrantedAuthorityDefaults(" ");
     }
 
    @Bean
