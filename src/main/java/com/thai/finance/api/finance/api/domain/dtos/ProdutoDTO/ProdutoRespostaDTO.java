@@ -9,7 +9,8 @@ public record ProdutoRespostaDTO(
         String sku,
         Integer estoque_minimo,
         UUID categoria_id,
-        BigInteger preco,
+        BigInteger precoCusto,
+        BigInteger precoVenda,
         UUID fornecedor_id,
         Boolean ativo
 ) {

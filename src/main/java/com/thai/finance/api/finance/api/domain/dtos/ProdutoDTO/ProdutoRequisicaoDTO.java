@@ -1,10 +1,13 @@
 package com.thai.finance.api.finance.api.domain.dtos.ProdutoDTO;
 
+import com.thai.finance.api.finance.api.domain.dtos.ProdutoFornecedorDTO.ProdutoFornecedorDTO;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.UUID;
 
 public record ProdutoRequisicaoDTO(
@@ -23,11 +26,14 @@ public record ProdutoRequisicaoDTO(
         @NotNull(message = "O campo 'categoria_id' não pode ser nulo.")
         UUID categoria_id,
 
-        @NotNull(message = "O campo 'preco' não pode ser nulo.")
-        BigInteger preco,
+        @NotNull(message = "O campo 'precoCusto' não pode ser nulo.")
+        BigInteger precoCusto,
 
-        @NotNull(message = "O campo 'fornecedor_id' não pode ser nulo.")
-        UUID fornecedor_id,
+        @NotNull(message = "O campo 'precoVenda' não pode ser nulo.")
+        BigInteger precoVenda,
+
+        @NotEmpty(message = "O campo 'fornecedor_id' não pode ser nulo.")
+        List<ProdutoFornecedorDTO> fornecedores,
 
         Boolean ativo
 ) {

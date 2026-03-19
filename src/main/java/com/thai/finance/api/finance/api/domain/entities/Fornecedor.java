@@ -7,6 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,8 +21,11 @@ public class Fornecedor {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(unique = true)
+    private String cnpj;
+
     @Column
-    private String nome;
+    private String razaoSocial;
 
     @Column
     private String email;
@@ -29,13 +33,17 @@ public class Fornecedor {
     @Column
     private String telefone;
 
+    @OneToMany(mappedBy = "fornecedor")
+    @JoinColumn(name = "produtosFornecidos")
+    private List<ProdutoFornecedor> produtosFornecidos;
+
     @CreatedDate
     private LocalDateTime criado_em;
 
     @LastModifiedDate
     private LocalDateTime ultima_atualizacao;
-    public Fornecedor(String nome) {
-        this.nome = nome;
+    public Fornecedor(String razaoSocial) {
+        this.razaoSocial = razaoSocial;
     }
 }
 
