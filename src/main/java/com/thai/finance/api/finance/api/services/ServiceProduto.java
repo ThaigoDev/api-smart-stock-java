@@ -38,7 +38,7 @@ public class ServiceProduto {
         EntidadeProduto.setFornecedor(fornecedorEncontrado);
         EntidadeProduto.setCategoria(categoriaEncontrada);
         var produtoSalvo = repositoryProduto.save(EntidadeProduto);
-        Estoque EntidadeEstoque = new Estoque(null, produtoSalvo);
+        Estoque EntidadeEstoque = new Estoque(null, produtoSalvo, EntidadeProduto.getEstoque_minimo());
 
         return mapper.paraDTO(produtoSalvo);
 

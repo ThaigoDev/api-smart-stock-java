@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -24,29 +23,20 @@ public class Produto {
     @Column
     private String nome;
 
-    @Column(unique = true)
+    @Column
     private String sku;
 
-    @Column
-    private String unidadeMedida;
-
-    @Column
-    private BigInteger precoCusto;
-
-    @Column
-    private BigInteger precoVenda;
+    private Integer estoque_minimo;
 
     @ManyToOne
     @JoinColumn(nullable = false)
     private Categoria categoria;
 
-    @OneToOne(mappedBy = "produto")
-    @JoinColumn(name = "estoque")
-    private Estoque estoque;
+    private BigInteger preco;
 
-    @OneToMany(mappedBy = "produto")
+    @ManyToOne
     @JoinColumn(nullable = false)
-    private List<ProdutoFornecedor> fornecedores;
+    private Fornecedor fornecedor;
 
    @Column
     private boolean ativo = true;

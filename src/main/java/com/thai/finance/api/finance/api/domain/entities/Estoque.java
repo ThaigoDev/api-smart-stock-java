@@ -8,7 +8,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,21 +22,11 @@ public class Estoque {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column
-    private BigDecimal quantidadeAtual;
-
-    @Column
-    private BigDecimal quantidadeMinima;
-
-    @Column
-    private BigDecimal quantidadeMaxima;
-
-    @Column
-    private String localizacao;
-
     @OneToOne
     @JoinColumn(nullable = true)
     private Produto produto;
+
+    private Integer quantidade;
 
     @CreatedDate
     private LocalDateTime criado_em;
@@ -45,13 +34,9 @@ public class Estoque {
     @LastModifiedDate
     private LocalDateTime ultima_atualizacao;
 
-    public Estoque(UUID id, Produto produto, BigDecimal quantidadeAtual, BigDecimal quantidadeMinima, BigDecimal quantidadeMaxima, String localizacao) {
+    public Estoque(UUID id, Produto produto, Integer quantidade) {
         this.id = id;
-        this.quantidadeAtual = quantidadeAtual;
-        this.quantidadeMinima = quantidadeMinima;
-        this.quantidadeMaxima = quantidadeMaxima;
-        this.localizacao = localizacao;
         this.produto = produto;
-
+        this.quantidade = quantidade;
     }
 }

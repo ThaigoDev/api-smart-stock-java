@@ -8,7 +8,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,21 +23,18 @@ public class MovimentacaoEstoque {
     @GeneratedValue(strategy  = GenerationType.UUID)
     private UUID id;
 
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Produto produto;
+
     @Enumerated(EnumType.STRING)
     private TipoMovimentacaoEstoque tipo;
 
     @Column
-    private BigDecimal quantidade;
+    private Integer quantidade;
 
     @Column
     private String motivo;
-
-    @Column
-    private String documentoReferencia;
-
-    @ManyToOne
-    @JoinColumn(name = "estoque")
-    private  Estoque estoque;
 
     @CreatedDate
     private LocalDateTime criado_em;
@@ -49,12 +45,11 @@ public class MovimentacaoEstoque {
     public MovimentacaoEstoque() {
     }
 
-    public MovimentacaoEstoque(UUID id, TipoMovimentacaoEstoque tipo, BigDecimal quantidade, String motivo, Estoque estoque) {
+    public MovimentacaoEstoque(UUID id, Produto produto, TipoMovimentacaoEstoque tipo, Integer quantidade) {
         this.id = id;
+        this.produto = produto;
         this.tipo = tipo;
         this.quantidade = quantidade;
-        this.motivo = motivo;
-        this.estoque = estoque;
     }
 
 
