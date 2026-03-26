@@ -32,10 +32,25 @@ jwt:
   private:
     key: classpath:keys/app.key
 
+server:
+  port: ${PORT:8080}
+
+#PERFIL PRODUÇÃO
 ---
 spring:
   config:
     activate:
       on-profile: production
+
+  datasouce:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+
   jpa:
-    show-sql: true
+    show-sql: false
+jwt:
+  public:
+    key: ${PUBLIC_KEY}
+  private:
+    key: ${PRIVATE_KEY}
