@@ -25,9 +25,9 @@ spring:
 
 jwt:
    public:
-     key: classpath:keys/app.pub
+     key: ${PUBLIC_KEY}
    private:
-    key: classpath:keys/app.key
+    key: ${PRIVATE_KEy}
 
 ---
 spring:
