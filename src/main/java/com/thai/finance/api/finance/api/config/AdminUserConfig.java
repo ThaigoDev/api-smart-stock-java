@@ -22,7 +22,10 @@ public class AdminUserConfig  implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String ...args) throws  Exception {
-        var FuncaoAdmin = repositoryFuncao.findByNome(Funcao.Values.ADMIN.name());
+        var FuncaoAdmin = repositoryFuncao.findByNome(Funcao.Values.ADMIN.name().toLowerCase());
+        if(FuncaoAdmin==null) {
+            throw  new RuntimeException(("Função não pode ser null"));
+        }
         var usuarioAdmin  = repositoryUsuario.findByEmail("admin@admin.com");
       usuarioAdmin.ifPresentOrElse((usuario)-> System.out.println("Usuário admin já existe"), ()-> {
           var usuario = new Usuario();
