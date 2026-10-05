@@ -83,4 +83,9 @@ public class ServiceProduto {
 
         return repositoryProduto.findAll(produtoExemplo).stream().map(mapper::paraDTO).toList();
     }
+
+    public ProdutoRespostaDTO obterPorId(UUID productId) {
+       var produtoEncontrado  =   repositoryProduto.findById(productId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+       return mapper.paraDTO(produtoEncontrado);
+    }
 }

@@ -5,10 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,10 +34,14 @@ public class MovimentacaoEstoque {
     @Column
     private String motivo;
 
+    // criado_em continua sendo o timestamp de auditoria (quando o registro foi de fato persistido no banco)
     @CreatedDate
     private LocalDateTime criado_em;
 
-    @LastModifiedDate
+    // data_movimentacao agora é um campo comum, definido explicitamente (data em que a movimentação
+    // efetivamente ocorreu). Antes estava com @LastModifiedDate, que sobrescrevia o valor para "agora"
+    // toda vez que a entidade era salva/atualizada, impedindo registrar histórico com datas passadas.
+    @Column
     private LocalDateTime data_movimentacao;
 
     public MovimentacaoEstoque() {
@@ -51,6 +53,5 @@ public class MovimentacaoEstoque {
         this.tipo = tipo;
         this.quantidade = quantidade;
     }
-
 
 }

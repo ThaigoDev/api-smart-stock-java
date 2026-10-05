@@ -42,6 +42,12 @@ public class ControllerProduto {
         return ResponseEntity.ok().body(produtos);
     }
 
+    @GetMapping("{id}")
+    public ResponseEntity<ProdutoRespostaDTO> obterProdutoPorId(@PathVariable("id") UUID product_id) {
+
+        return ResponseEntity.ok().body(serviceProduto.obterPorId(product_id));
+    }
+
     @DeleteMapping("{id}")
     public ResponseEntity<Void> removerProduto(@PathVariable("id") UUID produto_id) {
         serviceProduto.remover(produto_id);
