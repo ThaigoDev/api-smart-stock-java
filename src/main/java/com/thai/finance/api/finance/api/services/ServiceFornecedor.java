@@ -21,18 +21,13 @@ public class ServiceFornecedor {
 
     public FornecedorRespostaDTO salvar(FornecedorRequisicaoDTO fornecedorRequisicaoDTO) {
 
-        var fornecedorConvertido = mapper.paraDTO(repositoryFornecedor.save(mapper.paraEntidade(fornecedorRequisicaoDTO)));
-        return fornecedorConvertido;
+        return  mapper.paraDTO(repositoryFornecedor.save(mapper.paraEntidade(fornecedorRequisicaoDTO)));
+
     }
-
-    ;
-
     public List<FornecedorRespostaDTO> obter() {
         return repositoryFornecedor.findAll().stream().map(mapper::paraDTO).toList();
 
     }
-
-    ;
 
     public void remover(UUID fornecedor_id) {
         var fornecedorEncontrado = repositoryFornecedor.findById(fornecedor_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fornecedor não encontrado"));

@@ -40,7 +40,7 @@ public class ServiceUsuario {
         if (usuario.isEmpty() || !usuario.get().isLoginCorrect(loginRequisicaoDTO, passwordEncoder)) {
             throw new BadCredentialsException("Usuário ou senha inválidos");
         }
-        ;
+
         var expiraEm = 1000L;
         Instant horarioAtual = Instant.now();
         var scopes = usuario.get().getFuncoes().stream().map(Funcao::getNome).collect(Collectors.joining(" "));
