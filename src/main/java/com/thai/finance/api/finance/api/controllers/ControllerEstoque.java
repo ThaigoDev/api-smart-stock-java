@@ -24,7 +24,7 @@ public class ControllerEstoque {
       var estoqueCriado = serviceEstoque.salvar(estoqueRequisicaoDTO);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
-                .path("{id}")
+                .path("/{id}")
                 .buildAndExpand(estoqueCriado.id())
                 .toUri();
 

@@ -1,0 +1,152 @@
+newman
+
+Smart Stock - Roteiro de testes do TCC
+
+Root 00 Login
+  POST http://127.0.0.1:8081/auth [200 OK, 883B, 75ms]
+  Pass  200 OK
+
+Root 01 Sem token -> 401
+  GET http://127.0.0.1:8081/produtos [401 Unauthorized, 408B, 4ms]
+  Pass  401 Unauthorized
+
+Root 02 POST /categorias (válido) -> 201
+  POST http://127.0.0.1:8081/categorias [201 Created, 487B, 19ms]
+  Pass  201 Created
+
+Root 03 POST /fornecedores (válido) -> 201
+  POST http://127.0.0.1:8081/fornecedores [201 Created, 554B, 13ms]
+  Pass  201 Created
+
+Root 04 PUT /fornecedores/{id} -> 204
+  PUT http://127.0.0.1:8081/fornecedores/be27cc2b-6d14-4c2f-b4de-b94ab6fcc2ef [204 No Content, 282B, 12ms]
+  Pass  204 No Content
+
+Root 05 POST /produtos (válido) -> 201
+  POST http://127.0.0.1:8081/produtos [201 Created, 707B, 17ms]
+  Pass  201 Created
+
+Root 06 POST /produtos (categoria inexistente) -> 404
+  POST http://127.0.0.1:8081/produtos [404 Not Found, 411B, 9ms]
+  Pass  404 Not Found
+
+Root 07 POST /produtos (malformado) -> 400
+  POST http://127.0.0.1:8081/produtos [400 Bad Request, 941B, 6ms]
+  Pass  400 Bad Request
+  Pass  uma mensagem por campo inválido
+
+Root 08 POST /estoques (saldo inicial 50) -> 201
+  POST http://127.0.0.1:8081/estoques [201 Created, 581B, 23ms]
+  Pass  201 Created
+  Pass  saldo 50
+
+Root 09 POST /estoques (duplicado) -> 409
+  POST http://127.0.0.1:8081/estoques [409 Conflict, 467B, 13ms]
+  Pass  409 Conflict
+
+Root 10 Entrada de 20 -> 201 (saldo 70)
+  POST http://127.0.0.1:8081/movimentacoesestoque [201 Created, 755B, 22ms]
+  Pass  201 Created
+  Pass  saldo 50 -> 70
+
+Root 11 Saída válida de 60 -> 201 (saldo 10, REPOR)
+  POST http://127.0.0.1:8081/movimentacoesestoque [201 Created, 755B, 23ms]
+  Pass  201 Created
+  Pass  saldo 70 -> 10
+  Pass  alerta de reposição
+
+Root 12 Saída maior que o saldo -> 422 (estoque negativo bloqueado)
+  POST http://127.0.0.1:8081/movimentacoesestoque [422 Unprocessable Entity (WebDAV) (RFC 4918), 549B, 14ms]
+  Pass  422 Unprocessable Content
+  Pass  mensagem explica o motivo
+
+Root 13 Devolução de 2 -> 201
+  POST http://127.0.0.1:8081/movimentacoesestoque [201 Created, 755B, 19ms]
+  Pass  201 Created
+  Pass  saldo 12
+
+Root 14 Ajuste negativo de 3 (perda) -> 201
+  POST http://127.0.0.1:8081/movimentacoesestoque [201 Created, 757B, 31ms]
+  Pass  201 Created
+  Pass  saldo 9 (CRITICO)
+
+Root 15 Quantidade zero -> 400
+  POST http://127.0.0.1:8081/movimentacoesestoque [400 Bad Request, 464B, 4ms]
+  Pass  400 Bad Request
+
+Root 16 Tipo inexistente -> 400
+  POST http://127.0.0.1:8081/movimentacoesestoque [400 Bad Request, 422B, 5ms]
+  Pass  400 Bad Request
+
+Root 17 Movimentação de produto inexistente -> 404
+  POST http://127.0.0.1:8081/movimentacoesestoque [404 Not Found, 409B, 8ms]
+  Pass  404 Not Found
+
+Root 18 Estorno da saída -> 201 (saldo +60)
+  POST http://127.0.0.1:8081/movimentacoesestoque/3ff0ee32-adf1-44c3-82a9-50e4ea113eb6/estorno [201 Created, 814B, 27ms]
+  Pass  201 Created
+  Pass  saldo 69
+
+Root 19 Estorno repetido -> 422
+  POST http://127.0.0.1:8081/movimentacoesestoque/3ff0ee32-adf1-44c3-82a9-50e4ea113eb6/estorno [422 Unprocessable Entity (WebDAV) (RFC 4918), 467B, 13ms]
+  Pass  422 Unprocessable Content
+
+Root 20 DELETE de movimentação -> 405 (histórico imutável)
+  DELETE http://127.0.0.1:8081/movimentacoesestoque/3ff0ee32-adf1-44c3-82a9-50e4ea113eb6 [405 Method Not Allowed, 512B, 4ms]
+  Pass  405 Method Not Allowed
+
+Root 21 GET /produtos/{id}/extrato (kardex) -> 200
+  GET http://127.0.0.1:8081/produtos/2cb51e75-6254-47e5-8b99-6271f3cfa654/extrato [200 OK, 2.34kB, 10ms]
+  Pass  200 OK
+  Pass  6 lançamentos
+
+Root 22 DELETE /produtos/{id} com histórico -> 409
+  DELETE http://127.0.0.1:8081/produtos/2cb51e75-6254-47e5-8b99-6271f3cfa654 [409 Conflict, 487B, 8ms]
+  Pass  409 Conflict
+
+Root 23 GET /produtos/pesquisar -> 200
+  GET http://127.0.0.1:8081/produtos/pesquisar?nome=Produto 903832&categoria=8d643947-6f38-403b-b7ff-de16c9a66d51 [200 OK, 625B, 9ms]
+  Pass  200 OK
+  Pass  encontra o produto
+
+Root 24 GET /relatorios/alertas -> 200
+  GET http://127.0.0.1:8081/relatorios/alertas [200 OK, 18.6kB, 18ms]
+  Pass  200 OK
+
+Root 25 GET /relatorios/curva-abc -> 200
+  GET http://127.0.0.1:8081/relatorios/curva-abc [200 OK, 13.03kB, 20ms]
+  Pass  200 OK
+  Pass  três classes
+
+Root 26 GET /relatorios/giro -> 200
+  GET http://127.0.0.1:8081/relatorios/giro [200 OK, 15.1kB, 151ms]
+  Pass  200 OK
+
+Root 27 GET /relatorios/painel -> 200
+  GET http://127.0.0.1:8081/relatorios/painel [200 OK, 1.67kB, 111ms]
+  Pass  200 OK
+
+Root 28 GET /relatorios/conciliacao -> 200 (consistente)
+  GET http://127.0.0.1:8081/relatorios/conciliacao [200 OK, 544B, 127ms]
+  Pass  200 OK
+  Pass  banco consistente
+
+------------------------------------------------------------------
+|                         |          executed |           failed |
+--------------------------+-------------------+-------------------
+|              iterations |                 1 |                0 |
+--------------------------+-------------------+-------------------
+|                requests |                29 |                0 |
+--------------------------+-------------------+-------------------
+|            test-scripts |                29 |                0 |
+--------------------------+-------------------+-------------------
+|      prerequest-scripts |                 0 |                0 |
+--------------------------+-------------------+-------------------
+|              assertions |                42 |                0 |
+------------------------------------------------------------------
+| total run duration: 3.2s                                       |
+------------------------------------------------------------------
+| total data received: 54.17kB (approx)                          |
+------------------------------------------------------------------
+| average response time: 28ms [min: 4ms, max: 151ms, s.d.: 37ms] |
+------------------------------------------------------------------

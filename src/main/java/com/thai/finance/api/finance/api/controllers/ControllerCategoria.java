@@ -25,7 +25,7 @@ public class ControllerCategoria {
         var categoriaCriada =  serviceCategoria.salvar(categoriaRequisicaoDTO);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
-                .path("{id}")
+                .path("/{id}")
                 .buildAndExpand(categoriaCriada.id())
                 .toUri();
         return ResponseEntity.created(location).body(categoriaCriada);

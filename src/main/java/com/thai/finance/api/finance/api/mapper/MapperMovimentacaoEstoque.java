@@ -10,7 +10,10 @@ import org.mapstruct.Mapping;
 public interface MapperMovimentacaoEstoque {
     @Mapping(target ="produto", ignore = true)
     MovimentacaoEstoque paraEntidade(MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO);
+
     @Mapping(target = "produto_id", source = "produto.id")
+    @Mapping(target = "movimentacao_origem_id", source = "movimentacao_origem.id")
+    @Mapping(target = "situacao_estoque", ignore = true)
     MovimentacaoEstoqueRespostaDTO paraDTO(MovimentacaoEstoque movimentacaoEstoque);
 
 }

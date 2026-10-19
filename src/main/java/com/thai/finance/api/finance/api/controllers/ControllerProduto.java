@@ -2,6 +2,8 @@ package com.thai.finance.api.finance.api.controllers;
 
 import com.thai.finance.api.finance.api.domain.dtos.ProdutoDTO.ProdutoRequisicaoDTO;
 import com.thai.finance.api.finance.api.domain.dtos.ProdutoDTO.ProdutoRespostaDTO;
+import com.thai.finance.api.finance.api.domain.dtos.MovimentacaoEstoqueDTO.MovimentacaoEstoqueRespostaDTO;
+import com.thai.finance.api.finance.api.services.ServiceMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.services.ServiceProduto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ControllerProduto {
     private final ServiceProduto serviceProduto;
+    private final ServiceMovimentacaoEstoque serviceMovimentacaoEstoque;
 
 
 
@@ -27,7 +30,7 @@ public class ControllerProduto {
 
         URI location  = ServletUriComponentsBuilder
                 .fromCurrentRequest()
-                .path("{id}")
+                .path("/{id}")
                 .buildAndExpand(produtoCriado.id())
                 .toUri();
 
@@ -62,6 +65,12 @@ public class ControllerProduto {
     }
 
     ;
+
+    // kardex: histórico completo do produto com saldo antes e depois de cada movimentação
+    @GetMapping("{id}/extrato")
+    public ResponseEntity<List<MovimentacaoEstoqueRespostaDTO>> obterExtrato(@PathVariable("id") UUID produto_id) {
+        return ResponseEntity.ok().body(serviceMovimentacaoEstoque.extrato(produto_id));
+    }
 
     @GetMapping("pesquisar")
     public ResponseEntity<List<ProdutoRespostaDTO>> pesquisarProdutos(

@@ -1,0 +1,46 @@
+1. Produtos com saldo negativo (esperado: 0)
+ saldos_negativos 
+------------------
+                0
+(1 row)
+
+2. Saldo armazenado x soma dos efeitos do histórico (esperado: divergentes = 0)
+ produtos | movimentacoes | consistentes | divergentes 
+----------+---------------+--------------+-------------
+       61 |         21640 |           61 |           0
+(1 row)
+
+3. Quebras de encadeamento: saldo_anterior diferente do saldo_posterior da movimentação anterior (esperado: 0)
+ quebras 
+---------
+       0
+(1 row)
+
+4. Movimentações cujo saldo_posterior não corresponde a saldo_anterior + efeito (esperado: 0)
+ calculos_incorretos 
+---------------------
+                   0
+(1 row)
+
+5. Lacunas ou repetições na sequência do kardex (esperado: 0)
+ produtos_com_lacuna 
+---------------------
+                   0
+(1 row)
+
+6. Estornos sem origem marcada como estornada, ou com efeito diferente do inverso da origem (esperado: 0)
+ estornos_inconsistentes 
+-------------------------
+                       0
+(1 row)
+
+7. Volume por tipo de movimentação
+   tipo    | movimentacoes | unidades 
+-----------+---------------+----------
+ AJUSTE    |           152 |      956
+ DEVOLUCAO |           216 |      218
+ ENTRADA   |          2506 |   106732
+ ESTORNO   |            19 |    11748
+ SAIDA     |         18747 |    76328
+(5 rows)
+

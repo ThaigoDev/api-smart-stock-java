@@ -23,7 +23,7 @@ public class ControllerFornecedor {
     public ResponseEntity<FornecedorRespostaDTO> salvarFornecedor(@RequestBody @Valid FornecedorRequisicaoDTO fornecedorRequisicaoDTO) {
         var fornecedorCriado  =  serviceFornecedor.salvar(fornecedorRequisicaoDTO);
         URI location  = ServletUriComponentsBuilder
-                .fromCurrentRequest().path("{id}")
+                .fromCurrentRequest().path("/{id}")
                 .buildAndExpand(fornecedorCriado.id())
                 .toUri();
         return ResponseEntity.created(location).body(fornecedorCriado);

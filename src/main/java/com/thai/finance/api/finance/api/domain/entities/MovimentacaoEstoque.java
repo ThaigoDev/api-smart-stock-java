@@ -10,8 +10,15 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Registro imutável de uma alteração de saldo (livro-razão / kardex).
+ * Correções são feitas por estorno, nunca por edição ou exclusão, preservando a trilha de auditoria.
+ */
 @Entity
-@Table
+@Table(
+        indexes = @Index(name = "idx_movimentacao_produto_data", columnList = "produto_id, data_movimentacao"),
+        // segunda barreira contra atualização concorrente: duas movimentações nunca ocupam a mesma posição no kardex
+        uniqueConstraints = @UniqueConstraint(name = "uk_movimentacao_produto_sequencia", columnNames = {"produto_id", "sequencia"}))
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
@@ -28,6 +35,7 @@ public class MovimentacaoEstoque {
     @Enumerated(EnumType.STRING)
     private TipoMovimentacaoEstoque tipo;
 
+    // positiva para ENTRADA/SAIDA/DEVOLUCAO; com sinal para AJUSTE e ESTORNO
     @Column
     private Integer quantidade;
 
@@ -38,11 +46,24 @@ public class MovimentacaoEstoque {
     @CreatedDate
     private LocalDateTime criado_em;
 
-    // data_movimentacao agora é um campo comum, definido explicitamente (data em que a movimentação
-    // efetivamente ocorreu). Antes estava com @LastModifiedDate, que sobrescrevia o valor para "agora"
-    // toda vez que a entidade era salva/atualizada, impedindo registrar histórico com datas passadas.
+    // data em que a movimentação efetivamente ocorreu
     @Column
     private LocalDateTime data_movimentacao;
+
+    // saldo do produto imediatamente antes e depois desta movimentação
+    private Integer saldo_anterior;
+
+    private Integer saldo_posterior;
+
+    // posição da movimentação no histórico do produto (1, 2, 3...), atribuída sob o lock do estoque
+    private Long sequencia;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean estornada = false;
+
+    // preenchido apenas em movimentações do tipo ESTORNO
+    @ManyToOne
+    private MovimentacaoEstoque movimentacao_origem;
 
     public MovimentacaoEstoque() {
     }
@@ -52,6 +73,10 @@ public class MovimentacaoEstoque {
         this.produto = produto;
         this.tipo = tipo;
         this.quantidade = quantidade;
+    }
+
+    public int efeitoNoSaldo() {
+        return tipo.efeitoNoSaldo(quantidade);
     }
 
 }

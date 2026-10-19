@@ -1,0 +1,133 @@
+{
+  "executado_em": "2026-10-13T07:51:23",
+  "resultados": [
+    {
+      "cenario": "Leitura (produtos, estoques, alertas, curva ABC)",
+      "concorrencia": 1,
+      "requisicoes": 1000,
+      "duracao_s": 27.78,
+      "throughput_req_s": 36.0,
+      "latencia_media_ms": 27.6,
+      "latencia_p50_ms": 28.0,
+      "latencia_p95_ms": 57.0,
+      "latencia_p99_ms": 68.8,
+      "latencia_max_ms": 84.5,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "200": 1000
+      }
+    },
+    {
+      "cenario": "Leitura (produtos, estoques, alertas, curva ABC)",
+      "concorrencia": 10,
+      "requisicoes": 1000,
+      "duracao_s": 2.6,
+      "throughput_req_s": 384.1,
+      "latencia_media_ms": 25.5,
+      "latencia_p50_ms": 19.6,
+      "latencia_p95_ms": 58.2,
+      "latencia_p99_ms": 66.8,
+      "latencia_max_ms": 68.7,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "200": 1000
+      }
+    },
+    {
+      "cenario": "Leitura (produtos, estoques, alertas, curva ABC)",
+      "concorrencia": 50,
+      "requisicoes": 1000,
+      "duracao_s": 1.95,
+      "throughput_req_s": 513.9,
+      "latencia_media_ms": 93.1,
+      "latencia_p50_ms": 90.2,
+      "latencia_p95_ms": 132.2,
+      "latencia_p99_ms": 147.7,
+      "latencia_max_ms": 214.9,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "200": 1000
+      }
+    },
+    {
+      "cenario": "Escrita (movimentações de entrada e saída)",
+      "concorrencia": 1,
+      "requisicoes": 1000,
+      "duracao_s": 21.32,
+      "throughput_req_s": 46.9,
+      "latencia_media_ms": 21.2,
+      "latencia_p50_ms": 26.6,
+      "latencia_p95_ms": 33.6,
+      "latencia_p99_ms": 35.6,
+      "latencia_max_ms": 45.8,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "201": 988,
+        "422": 12
+      }
+    },
+    {
+      "cenario": "Escrita (movimentações de entrada e saída)",
+      "concorrencia": 10,
+      "requisicoes": 1000,
+      "duracao_s": 1.18,
+      "throughput_req_s": 847.7,
+      "latencia_media_ms": 11.6,
+      "latencia_p50_ms": 8.7,
+      "latencia_p95_ms": 29.4,
+      "latencia_p99_ms": 32.2,
+      "latencia_max_ms": 40.7,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "201": 990,
+        "422": 10
+      }
+    },
+    {
+      "cenario": "Escrita (movimentações de entrada e saída)",
+      "concorrencia": 50,
+      "requisicoes": 1000,
+      "duracao_s": 0.81,
+      "throughput_req_s": 1233.1,
+      "latencia_media_ms": 38.7,
+      "latencia_p50_ms": 36.8,
+      "latencia_p95_ms": 60.4,
+      "latencia_p99_ms": 70.2,
+      "latencia_max_ms": 98.5,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "201": 1000
+      }
+    },
+    {
+      "cenario": "Disputa: 50 saídas simultâneas de 5 un. (saldo 100)",
+      "concorrencia": 50,
+      "requisicoes": 50,
+      "duracao_s": 0.13,
+      "throughput_req_s": 382.6,
+      "latencia_media_ms": 83.2,
+      "latencia_p50_ms": 96.5,
+      "latencia_p95_ms": 111.3,
+      "latencia_p99_ms": 113.1,
+      "latencia_max_ms": 113.6,
+      "taxa_erro_servidor_pct": 0.0,
+      "status": {
+        "201": 20,
+        "422": 30
+      },
+      "saldo_final": 0,
+      "aprovadas_esperadas": 20,
+      "correto": true
+    }
+  ],
+  "conciliacao_final": {
+    "produtos_verificados": 61,
+    "produtos_consistentes": 61,
+    "produtos_divergentes": 0,
+    "movimentacoes_verificadas": 21640,
+    "quebras_de_encadeamento": 0,
+    "produtos_com_saldo_negativo": 0,
+    "consistente": true,
+    "tempo_ms": 160.4
+  }
+}

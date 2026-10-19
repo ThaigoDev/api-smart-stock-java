@@ -310,6 +310,33 @@ http://localhost:8080
 
 ---
 
+## 9.5 Endpoints de estoque e relatórios
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/movimentacoesestoque` | Registra ENTRADA, SAIDA, DEVOLUCAO ou AJUSTE (ajuste aceita valor negativo). Saída sem saldo retorna 422 |
+| GET | `/movimentacoesestoque?produto_id=&tipo=&inicio=&fim=` | Lista movimentações com filtros |
+| POST | `/movimentacoesestoque/{id}/estorno` | Desfaz uma movimentação (o histórico é imutável) |
+| GET | `/produtos/{id}/extrato` | Kardex do produto (saldo anterior e posterior de cada lançamento) |
+| GET | `/relatorios/painel` | Valor em estoque, produtos por situação, vendas dos últimos 30 dias |
+| GET | `/relatorios/alertas` | Ruptura, estoque crítico, ponto de pedido e superestoque, com sugestão de compra |
+| GET | `/relatorios/curva-abc?inicio=&fim=` | Classificação ABC pelo valor vendido |
+| GET | `/relatorios/giro?inicio=&fim=` | Giro, estoque médio e cobertura em dias |
+| GET | `/relatorios/movimentacoes-mensais` | Série mensal de movimentações e faturamento |
+| GET | `/relatorios/conciliacao` | Auditoria: saldo de cada produto = soma do seu histórico |
+
+## 9.6 Testes e resultados
+
+```
+./mvnw test
+```
+
+79 testes de unidade e integração (H2 em memória, sem dependências externas). O roteiro Postman, o teste de carga, a auditoria SQL e os resultados medidos estão em [`docs/RESULTADOS-TCC.md`](docs/RESULTADOS-TCC.md).
+
+Com o banco vazio, a aplicação gera automaticamente a massa de dados do cenário experimental (minimercado com 59 produtos e 26 semanas de operação). Para desativar, use `SEED_ENABLED=false`.
+
+---
+
 # 10. Licença
 
 Este projeto foi desenvolvido para **fins educacionais**, com o objetivo de estudo de **arquitetura de software, modelagem UML e desenvolvimento backend com Spring Boot**.

@@ -2,86 +2,178 @@ package com.thai.finance.api.finance.api.services;
 
 import com.thai.finance.api.finance.api.domain.dtos.MovimentacaoEstoqueDTO.MovimentacaoEstoqueRequisicaoDTO;
 import com.thai.finance.api.finance.api.domain.dtos.MovimentacaoEstoqueDTO.MovimentacaoEstoqueRespostaDTO;
-import com.thai.finance.api.finance.api.domain.entities.Produto;
 import com.thai.finance.api.finance.api.domain.entities.Estoque;
 import com.thai.finance.api.finance.api.domain.entities.MovimentacaoEstoque;
+import com.thai.finance.api.finance.api.domain.entities.Produto;
+import com.thai.finance.api.finance.api.domain.enums.SituacaoEstoque;
 import com.thai.finance.api.finance.api.domain.enums.TipoMovimentacaoEstoque;
+import com.thai.finance.api.finance.api.exceptions.RegraNegocioException;
 import com.thai.finance.api.finance.api.mapper.MapperMovimentacaoEstoque;
-import com.thai.finance.api.finance.api.respository.RepositoryProduto;
-import com.thai.finance.api.finance.api.respository.RepositoryMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryEstoque;
+import com.thai.finance.api.finance.api.respository.RepositoryMovimentacaoEstoque;
+import com.thai.finance.api.finance.api.respository.RepositoryProduto;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ServiceMovimentacaoEstoque {
+    // janela usada para estimar a demanda média diária de cada produto
+    public static final int JANELA_DEMANDA_DIAS = 30;
+
     private final RepositoryMovimentacaoEstoque repositoryMovimentacaoEstoque;
     private final RepositoryProduto repositoryProduto;
     private final RepositoryEstoque repositoryEstoque;
     private final MapperMovimentacaoEstoque mapper;
 
+    @Transactional
     public MovimentacaoEstoqueRespostaDTO salvar(MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO) {
-        if (movimentacaoEstoqueRequisicaoDTO.produto_id() == null) {
-            throw new IllegalArgumentException("Produto é obrigatório");
-        }
+        return registrar(movimentacaoEstoqueRequisicaoDTO, null);
+    }
 
-        Produto produtoEncontrado = repositoryProduto.findById(movimentacaoEstoqueRequisicaoDTO.produto_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
-        System.out.println(produtoEncontrado.getNome());
-        MovimentacaoEstoque movimentacaoEstoqueEntidade = mapper.paraEntidade(movimentacaoEstoqueRequisicaoDTO);
-        movimentacaoEstoqueEntidade.setProduto(produtoEncontrado);
-        System.out.println(movimentacaoEstoqueEntidade.getProduto().getNome());
-        Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
-        System.out.println(estoqueEncontrado.getProduto().getNome());
-        if (movimentacaoEstoqueRequisicaoDTO.tipo() == TipoMovimentacaoEstoque.SAIDA) {
-            if (movimentacaoEstoqueRequisicaoDTO.quantidade() >= (estoqueEncontrado.getQuantidade() - produtoEncontrado.getEstoque_minimo()) ) {
-                throw new IllegalArgumentException("Movimentação não autorizada,  a quantidade é maior que o estoque mínimo do produto" + produtoEncontrado.getNome());
+    /**
+     * Registra a movimentação na data informada (null = agora, medido após obter o lock). Atualização do saldo e gravação do histórico ocorrem
+     * na mesma transação: ou as duas persistem, ou nenhuma (atomicidade).
+     */
+    @Transactional
+    public MovimentacaoEstoqueRespostaDTO registrar(MovimentacaoEstoqueRequisicaoDTO dto, LocalDateTime dataMovimentacao) {
+        if (!dto.tipo().permitidoViaApi()) {
+            throw new RegraNegocioException("O tipo " + dto.tipo() + " é gerado apenas pelo sistema.");
+        }
+        Produto produto = repositoryProduto.findById(dto.produto_id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        if (!produto.isAtivo()) {
+            throw new RegraNegocioException("O produto '" + produto.getNome() + "' está inativo e não aceita movimentações.");
+        }
+        Estoque estoque = travarEstoque(produto);
+        LocalDateTime data = dataMovimentacao != null ? dataMovimentacao : LocalDateTime.now();
+
+        MovimentacaoEstoque movimentacao = mapper.paraEntidade(dto);
+        movimentacao.setProduto(produto);
+        movimentacao.setData_movimentacao(data);
+
+        MovimentacaoEstoque salva = aplicar(estoque, movimentacao);
+        return mapper.paraDTO(salva).comSituacao(situacaoApos(produto, salva.getSaldo_posterior(), data));
+    }
+
+    @Transactional
+    public MovimentacaoEstoqueRespostaDTO estornar(UUID movimentacaoId, String motivo) {
+        return estornar(movimentacaoId, motivo, null);
+    }
+
+    /**
+     * Desfaz uma movimentação registrando outra com efeito inverso. A original é mantida e marcada como
+     * estornada, preservando a trilha de auditoria.
+     */
+    @Transactional
+    public MovimentacaoEstoqueRespostaDTO estornar(UUID movimentacaoId, String motivo, LocalDateTime dataEstorno) {
+        MovimentacaoEstoque original = repositoryMovimentacaoEstoque.buscarParaEstorno(movimentacaoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movimentação de Estoque não encontrada"));
+        if (original.getTipo() == TipoMovimentacaoEstoque.ESTORNO) {
+            throw new RegraNegocioException("Um estorno não pode ser estornado.");
+        }
+        if (original.isEstornada()) {
+            throw new RegraNegocioException("Esta movimentação já foi estornada.");
+        }
+        Produto produto = original.getProduto();
+        Estoque estoque = travarEstoque(produto);
+        LocalDateTime data = dataEstorno != null ? dataEstorno : LocalDateTime.now();
+
+        MovimentacaoEstoque estorno = new MovimentacaoEstoque();
+        estorno.setProduto(produto);
+        estorno.setTipo(TipoMovimentacaoEstoque.ESTORNO);
+        estorno.setQuantidade(-original.efeitoNoSaldo());
+        estorno.setMotivo("Estorno de " + original.getTipo() + ": " + motivo);
+        estorno.setData_movimentacao(data);
+        estorno.setMovimentacao_origem(original);
+
+        MovimentacaoEstoque salvo = aplicar(estoque, estorno);
+        original.setEstornada(true);
+        repositoryMovimentacaoEstoque.save(original);
+        return mapper.paraDTO(salvo).comSituacao(situacaoApos(produto, salvo.getSaldo_posterior(), data));
+    }
+
+    @Transactional(readOnly = true)
+    public List<MovimentacaoEstoqueRespostaDTO> obter(UUID produtoId, TipoMovimentacaoEstoque tipo, LocalDate inicio, LocalDate fim) {
+        Specification<MovimentacaoEstoque> filtro = (root, query, cb) -> {
+            List<Predicate> condicoes = new ArrayList<>();
+            if (produtoId != null) {
+                condicoes.add(cb.equal(root.get("produto").get("id"), produtoId));
             }
-
-            estoqueEncontrado.setQuantidade(estoqueEncontrado.getQuantidade() - movimentacaoEstoqueRequisicaoDTO.quantidade());
-            repositoryEstoque.save(estoqueEncontrado);
-        } else {
-            estoqueEncontrado.setQuantidade(estoqueEncontrado.getQuantidade() + movimentacaoEstoqueRequisicaoDTO.quantidade());
-            repositoryEstoque.save(estoqueEncontrado);
-        }
-
-        return mapper.paraDTO(repositoryMovimentacaoEstoque.save(movimentacaoEstoqueEntidade));
-    }
-
-    public List<MovimentacaoEstoqueRespostaDTO> obter() {
-        return repositoryMovimentacaoEstoque.findAll().stream().map(mapper::paraDTO).toList();
-    }
-
-    public void remover(UUID movimentacaoEstoque_id) {
-        repositoryMovimentacaoEstoque.deleteById(movimentacaoEstoque_id);
-    }
-
-    public MovimentacaoEstoqueRespostaDTO atualizar(UUID movimentacaoEstoque_id, MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO) {
-        MovimentacaoEstoque movimentacaoEstoqueEncontrada = repositoryMovimentacaoEstoque.findById(movimentacaoEstoque_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movimentação de Estoque não encontrada"));
-        Produto produtoEncontrado = repositoryProduto.findById(movimentacaoEstoqueRequisicaoDTO.produto_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
-        Estoque estoqueEncontrado = repositoryEstoque.findByProduto(produtoEncontrado).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado"));
-
-        if (movimentacaoEstoqueRequisicaoDTO.tipo() == TipoMovimentacaoEstoque.SAIDA) {
-            if (movimentacaoEstoqueRequisicaoDTO.quantidade() >= produtoEncontrado.getEstoque_minimo()) {
-                throw new IllegalArgumentException("Movimentação não autorizada,  a quantidade é maior que o estoque mínimo do produto" + produtoEncontrado.getNome());
+            if (tipo != null) {
+                condicoes.add(cb.equal(root.get("tipo"), tipo));
             }
-            estoqueEncontrado.setQuantidade(estoqueEncontrado.getQuantidade() - movimentacaoEstoqueRequisicaoDTO.quantidade());
-        } else {
-            estoqueEncontrado.setQuantidade(estoqueEncontrado.getQuantidade() + movimentacaoEstoqueRequisicaoDTO.quantidade());
+            if (inicio != null) {
+                condicoes.add(cb.greaterThanOrEqualTo(root.get("data_movimentacao"), inicio.atStartOfDay()));
+            }
+            if (fim != null) {
+                condicoes.add(cb.lessThan(root.get("data_movimentacao"), fim.plusDays(1).atStartOfDay()));
+            }
+            return cb.and(condicoes.toArray(new Predicate[0]));
+        };
+        return repositoryMovimentacaoEstoque.findAll(filtro).stream()
+                .sorted(Comparator.comparing(MovimentacaoEstoque::getData_movimentacao)
+                        .thenComparing(MovimentacaoEstoque::getSequencia, Comparator.nullsFirst(Comparator.naturalOrder())))
+                .map(mapper::paraDTO).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MovimentacaoEstoqueRespostaDTO obterPorId(UUID movimentacaoId) {
+        return mapper.paraDTO(repositoryMovimentacaoEstoque.findById(movimentacaoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movimentação de Estoque não encontrada")));
+    }
+
+    @Transactional(readOnly = true)
+    public List<MovimentacaoEstoqueRespostaDTO> extrato(UUID produtoId) {
+        if (!repositoryProduto.existsById(produtoId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado");
         }
+        return repositoryMovimentacaoEstoque.buscarExtrato(produtoId).stream().map(mapper::paraDTO).toList();
+    }
 
+    public double demandaMediaDiaria(UUID produtoId, LocalDateTime referencia) {
+        long vendido = repositoryMovimentacaoEstoque.somarQuantidade(produtoId, TipoMovimentacaoEstoque.SAIDA,
+                referencia.minusDays(JANELA_DEMANDA_DIAS), referencia);
+        return (double) vendido / JANELA_DEMANDA_DIAS;
+    }
 
-        movimentacaoEstoqueEncontrada.setProduto(produtoEncontrado);
-        movimentacaoEstoqueEncontrada.setTipo(movimentacaoEstoqueRequisicaoDTO.tipo());
-        movimentacaoEstoqueEncontrada.setQuantidade(movimentacaoEstoqueRequisicaoDTO.quantidade());
+    private Estoque travarEstoque(Produto produto) {
+        return repositoryEstoque.buscarParaAtualizacao(produto.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estoque não encontrado para o produto"));
+    }
 
-        repositoryProduto.save(produtoEncontrado);
-        repositoryEstoque.save(estoqueEncontrado);
+    private MovimentacaoEstoque aplicar(Estoque estoque, MovimentacaoEstoque movimentacao) {
+        int saldoAnterior = estoque.getQuantidade();
+        int saldoPosterior = saldoAnterior + movimentacao.efeitoNoSaldo();
+        if (saldoPosterior < 0) {
+            throw new RegraNegocioException(String.format(
+                    "Saldo insuficiente para '%s': saldo atual %d, a movimentação de %d unidade(s) deixaria o estoque negativo.",
+                    movimentacao.getProduto().getNome(), saldoAnterior, Math.abs(movimentacao.efeitoNoSaldo())));
+        }
+        long sequencia = (estoque.getUltima_sequencia() == null ? 0 : estoque.getUltima_sequencia()) + 1;
+        estoque.setQuantidade(saldoPosterior);
+        estoque.setUltima_sequencia(sequencia);
+        repositoryEstoque.save(estoque);
 
-        return mapper.paraDTO(repositoryMovimentacaoEstoque.save(movimentacaoEstoqueEncontrada));
+        movimentacao.setSaldo_anterior(saldoAnterior);
+        movimentacao.setSaldo_posterior(saldoPosterior);
+        movimentacao.setSequencia(sequencia);
+        return repositoryMovimentacaoEstoque.save(movimentacao);
+    }
+
+    private SituacaoEstoque situacaoApos(Produto produto, int saldo, LocalDateTime referencia) {
+        return produto.politicaEstoque().classificar(saldo, demandaMediaDiaria(produto.getId(), referencia));
     }
 }

@@ -15,7 +15,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: ${SHOW_SQL:false}
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   security:
@@ -34,6 +34,14 @@ jwt:
 
 server:
   port: ${PORT:8080}
+
+smartstock:
+  seed:
+    # gera a massa de dados sintética do cenário experimental quando o banco está vazio
+    enabled: ${SEED_ENABLED:true}
+    # último dia simulado (AAAA-MM-DD); vazio = domingo anterior à data atual
+    data-fim: ${SEED_DATA_FIM:}
+    semanas: ${SEED_SEMANAS:26}
 
 #PERFIL PRODUÇÃO
 ---

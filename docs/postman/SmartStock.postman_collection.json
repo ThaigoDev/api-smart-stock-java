@@ -1,0 +1,278 @@
+{
+  "info": {
+    "name": "Smart Stock - Roteiro de testes do TCC",
+    "description": "Execute em ordem (Collection Runner). Cada requisição verifica o status esperado e guarda os IDs necessários para as seguintes. Ajuste a variável baseUrl.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "email", "value": "admin@admin.com" },
+    { "key": "senha", "value": "admin331400" },
+    { "key": "token", "value": "" },
+    { "key": "sufixo", "value": "" },
+    { "key": "categoriaId", "value": "" },
+    { "key": "fornecedorId", "value": "" },
+    { "key": "produtoId", "value": "" },
+    { "key": "saidaId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "00 Login",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+        "pm.collectionVariables.set('token', pm.response.json().acessToken);",
+        "pm.collectionVariables.set('sufixo', String(Date.now()).slice(-6));"
+      ] } }],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"email\": \"{{email}}\", \"senha\": \"{{senha}}\"}" },
+        "url": "{{baseUrl}}/auth"
+      }
+    },
+    {
+      "name": "01 Sem token -> 401",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"] } }],
+      "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/produtos" }
+    },
+    {
+      "name": "02 POST /categorias (válido) -> 201",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('categoriaId', pm.response.json().id);"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nome\": \"Teste {{sufixo}}\", \"descricao\": \"Categoria do roteiro\"}" },
+        "url": "{{baseUrl}}/categorias"
+      }
+    },
+    {
+      "name": "03 POST /fornecedores (válido) -> 201",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('fornecedorId', pm.response.json().id);"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nome\": \"Distribuidora Roteiro\", \"email\": \"roteiro@teste.com.br\", \"telefone\": \"31999990000\"}" },
+        "url": "{{baseUrl}}/fornecedores"
+      }
+    },
+    {
+      "name": "04 PUT /fornecedores/{id} -> 204",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }],
+      "request": {
+        "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nome\": \"Distribuidora Roteiro Ltda\", \"email\": \"roteiro@teste.com.br\", \"telefone\": \"31999990000\"}" },
+        "url": "{{baseUrl}}/fornecedores/{{fornecedorId}}"
+      }
+    },
+    {
+      "name": "05 POST /produtos (válido) -> 201",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "pm.collectionVariables.set('produtoId', pm.response.json().id);"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nome\": \"Produto {{sufixo}}\", \"sku\": \"ROT-{{sufixo}}\", \"estoque_minimo\": 10, \"estoque_maximo\": 100, \"prazo_reposicao_dias\": 5, \"categoria_id\": \"{{categoriaId}}\", \"preco\": 1000, \"fornecedor_id\": \"{{fornecedorId}}\"}" },
+        "url": "{{baseUrl}}/produtos"
+      }
+    },
+    {
+      "name": "06 POST /produtos (categoria inexistente) -> 404",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('404 Not Found', () => pm.response.to.have.status(404));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nome\": \"Produto Orfao\", \"sku\": \"ORF-0001\", \"estoque_minimo\": 1, \"categoria_id\": \"00000000-0000-0000-0000-000000000000\", \"preco\": 100, \"fornecedor_id\": \"{{fornecedorId}}\"}" },
+        "url": "{{baseUrl}}/produtos"
+      }
+    },
+    {
+      "name": "07 POST /produtos (malformado) -> 400",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+        "pm.test('uma mensagem por campo inválido', () => pm.expect(pm.response.json().length).to.be.at.least(7));"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"nome\": \"abc\", \"sku\": \"\", \"estoque_minimo\": -1, \"preco\": -5}" },
+        "url": "{{baseUrl}}/produtos"
+      }
+    },
+    {
+      "name": "08 POST /estoques (saldo inicial 50) -> 201",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "pm.test('saldo 50', () => pm.expect(pm.response.json().quantidade).to.eql(50));"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"quantidade\": 50}" },
+        "url": "{{baseUrl}}/estoques"
+      }
+    },
+    {
+      "name": "09 POST /estoques (duplicado) -> 409",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('409 Conflict', () => pm.response.to.have.status(409));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"quantidade\": 5}" },
+        "url": "{{baseUrl}}/estoques"
+      }
+    },
+    {
+      "name": "10 Entrada de 20 -> 201 (saldo 70)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "pm.test('saldo 50 -> 70', () => { const r = pm.response.json(); pm.expect(r.saldo_anterior).to.eql(50); pm.expect(r.saldo_posterior).to.eql(70); });"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"ENTRADA\", \"quantidade\": 20, \"motivo\": \"Recebimento de NF\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "11 Saída válida de 60 -> 201 (saldo 10, REPOR)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201 Created', () => pm.response.to.have.status(201));",
+        "const r = pm.response.json();",
+        "pm.test('saldo 70 -> 10', () => pm.expect(r.saldo_posterior).to.eql(10));",
+        "pm.test('alerta de reposição', () => pm.expect(r.situacao_estoque).to.eql('REPOR'));",
+        "pm.collectionVariables.set('saidaId', r.id);"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"SAIDA\", \"quantidade\": 60, \"motivo\": \"Venda ao consumidor\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "12 Saída maior que o saldo -> 422 (estoque negativo bloqueado)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('422 Unprocessable Content', () => pm.response.to.have.status(422));",
+        "pm.test('mensagem explica o motivo', () => pm.expect(pm.response.json().message).to.include('Saldo insuficiente'));"
+      ] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"SAIDA\", \"quantidade\": 11, \"motivo\": \"Venda ao consumidor\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "13 Devolução de 2 -> 201",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.test('saldo 12', () => pm.expect(pm.response.json().saldo_posterior).to.eql(12));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"DEVOLUCAO\", \"quantidade\": 2, \"motivo\": \"Troca de cliente\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "14 Ajuste negativo de 3 (perda) -> 201",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.test('saldo 9 (CRITICO)', () => { const r = pm.response.json(); pm.expect(r.saldo_posterior).to.eql(9); pm.expect(r.situacao_estoque).to.eql('CRITICO'); });"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"AJUSTE\", \"quantidade\": -3, \"motivo\": \"Inventário: avaria\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "15 Quantidade zero -> 400",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('400 Bad Request', () => pm.response.to.have.status(400));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"SAIDA\", \"quantidade\": 0, \"motivo\": \"x\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "16 Tipo inexistente -> 400",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('400 Bad Request', () => pm.response.to.have.status(400));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"{{produtoId}}\", \"tipo\": \"VENDA\", \"quantidade\": 1, \"motivo\": \"x\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "17 Movimentação de produto inexistente -> 404",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('404 Not Found', () => pm.response.to.have.status(404));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"produto_id\": \"00000000-0000-0000-0000-000000000000\", \"tipo\": \"ENTRADA\", \"quantidade\": 1, \"motivo\": \"x\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque"
+      }
+    },
+    {
+      "name": "18 Estorno da saída -> 201 (saldo +60)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.test('saldo 69', () => pm.expect(pm.response.json().saldo_posterior).to.eql(69));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"motivo\": \"Venda cancelada no caixa\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque/{{saidaId}}/estorno"
+      }
+    },
+    {
+      "name": "19 Estorno repetido -> 422",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('422 Unprocessable Content', () => pm.response.to.have.status(422));"] } }],
+      "request": {
+        "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"motivo\": \"de novo\"}" },
+        "url": "{{baseUrl}}/movimentacoesestoque/{{saidaId}}/estorno"
+      }
+    },
+    {
+      "name": "20 DELETE de movimentação -> 405 (histórico imutável)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('405 Method Not Allowed', () => pm.response.to.have.status(405));"] } }],
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/movimentacoesestoque/{{saidaId}}" }
+    },
+    {
+      "name": "21 GET /produtos/{id}/extrato (kardex) -> 200",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('6 lançamentos', () => pm.expect(pm.response.json().length).to.eql(6));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/produtos/{{produtoId}}/extrato" }
+    },
+    {
+      "name": "22 DELETE /produtos/{id} com histórico -> 409",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('409 Conflict', () => pm.response.to.have.status(409));"] } }],
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/produtos/{{produtoId}}" }
+    },
+    {
+      "name": "23 GET /produtos/pesquisar -> 200",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('encontra o produto', () => pm.expect(pm.response.json().map(p => p.id)).to.include(pm.collectionVariables.get('produtoId')));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/produtos/pesquisar?nome=Produto {{sufixo}}&categoria={{categoriaId}}" }
+    },
+    {
+      "name": "24 GET /relatorios/alertas -> 200",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/relatorios/alertas" }
+    },
+    {
+      "name": "25 GET /relatorios/curva-abc -> 200",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('três classes', () => pm.expect(pm.response.json().resumo_por_classe.length).to.eql(3));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/relatorios/curva-abc" }
+    },
+    {
+      "name": "26 GET /relatorios/giro -> 200",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/relatorios/giro" }
+    },
+    {
+      "name": "27 GET /relatorios/painel -> 200",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/relatorios/painel" }
+    },
+    {
+      "name": "28 GET /relatorios/conciliacao -> 200 (consistente)",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('banco consistente', () => pm.expect(pm.response.json().consistente).to.be.true);"] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/relatorios/conciliacao" }
+    }
+  ]
+}

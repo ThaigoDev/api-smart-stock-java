@@ -11,6 +11,8 @@ public record ProdutoRespostaDTO(
         UUID categoria_id,
         BigInteger preco,
         UUID fornecedor_id,
-        Boolean ativo
+        Boolean ativo,
+        Integer estoque_maximo,
+        Integer prazo_reposicao_dias
 ) {
 }

@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:smartstock;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;LOCK_TIMEOUT=20000;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  sql:
+    init:
+      mode: never
+  output:
+    ansi:
+      enabled: NEVER
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: teste
+            client-secret: teste
+
+smartstock:
+  seed:
+    enabled: false

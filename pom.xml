@@ -109,6 +109,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- banco em memória (modo PostgreSQL) para os testes de integração rodarem sem infraestrutura externa -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -28,6 +28,9 @@ public class Estoque {
 
     private Integer quantidade;
 
+    // sequência da última movimentação aplicada a este estoque
+    private Long ultima_sequencia;
+
     @CreatedDate
     private LocalDateTime criado_em;
 

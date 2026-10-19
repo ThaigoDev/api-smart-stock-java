@@ -30,12 +30,13 @@ public class ServiceProduto {
 
     public ProdutoRespostaDTO salvar(ProdutoRequisicaoDTO produtoRequisicaoDTO) {
 
-        Categoria categoriaEncontrada = repositoryCategoria.findById(produtoRequisicaoDTO.categoria_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria Encontrada"));
-        Fornecedor fornecedorEncontrado = repositoryFornecedor.findById(produtoRequisicaoDTO.fornecedor_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fornecedor Encontrado"));
+        Categoria categoriaEncontrada = repositoryCategoria.findById(produtoRequisicaoDTO.categoria_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+        Fornecedor fornecedorEncontrado = repositoryFornecedor.findById(produtoRequisicaoDTO.fornecedor_id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fornecedor não encontrado"));
 
         var EntidadeProduto = mapper.paraEntidade(produtoRequisicaoDTO);
         EntidadeProduto.setFornecedor(fornecedorEncontrado);
         EntidadeProduto.setCategoria(categoriaEncontrada);
+        EntidadeProduto.setAtivo(produtoRequisicaoDTO.ativo() == null || produtoRequisicaoDTO.ativo());
         var produtoSalvo = repositoryProduto.save(EntidadeProduto);
 
         return mapper.paraDTO(produtoSalvo);
@@ -56,23 +57,36 @@ public class ServiceProduto {
         produtoEcontrado.setNome(produtoRequisicaoDTO.nome());
         produtoEcontrado.setSku(produtoRequisicaoDTO.sku());
         produtoEcontrado.setEstoque_minimo(produtoRequisicaoDTO.estoque_minimo());
+        produtoEcontrado.setEstoque_maximo(produtoRequisicaoDTO.estoque_maximo());
+        produtoEcontrado.setPrazo_reposicao_dias(produtoRequisicaoDTO.prazo_reposicao_dias());
+        produtoEcontrado.setPreco(produtoRequisicaoDTO.preco());
         produtoEcontrado.setCategoria(categoriaEncontrada);
         produtoEcontrado.setFornecedor(fornecedorEncontrado);
-        produtoEcontrado.setAtivo(produtoRequisicaoDTO.ativo());
+        if (produtoRequisicaoDTO.ativo() != null) {
+            produtoEcontrado.setAtivo(produtoRequisicaoDTO.ativo());
+        }
         repositoryProduto.save(produtoEcontrado);
     }
 
     public void remover(UUID productId) {
-        Produto produtoExist = repositoryProduto.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        Produto produtoExist = repositoryProduto.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        // produto com estoque/histórico viola a chave estrangeira ao confirmar: tratado como 409 no manipulador global
         repositoryProduto.deleteById(produtoExist.getId());
     }
 
     public List<ProdutoRespostaDTO> buscar(String nome, String sku, String categoria) {
         var ExemploProduto = new Produto();
         ExemploProduto.setNome(nome);
-        Categoria categoriaEncontrada = repositoryCategoria.findById(UUID.fromString(categoria)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
-
-        ExemploProduto.setCategoria(categoriaEncontrada);
+        if (categoria != null && !categoria.isBlank()) {
+            UUID categoriaId;
+            try {
+                categoriaId = UUID.fromString(categoria);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O parâmetro 'categoria' deve ser um UUID válido");
+            }
+            Categoria categoriaEncontrada = repositoryCategoria.findById(categoriaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+            ExemploProduto.setCategoria(categoriaEncontrada);
+        }
         ExemploProduto.setSku(sku);
 
         ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreCase().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
@@ -83,7 +97,7 @@ public class ServiceProduto {
     }
 
     public ProdutoRespostaDTO obterPorId(UUID productId) {
-       var produtoEncontrado  =   repositoryProduto.findById(productId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+       var produtoEncontrado  =   repositoryProduto.findById(productId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
        return mapper.paraDTO(produtoEncontrado);
     }
 }

@@ -8,12 +8,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
+@Order(1)
 public class AdminUserConfig  implements CommandLineRunner {
     private final RepositoryFuncao repositoryFuncao;
     private final RepositoryUsuario repositoryUsuario;
@@ -22,10 +24,10 @@ public class AdminUserConfig  implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String ...args) throws  Exception {
-        var FuncaoAdmin = repositoryFuncao.findByNome(Funcao.Values.ADMIN.name().toLowerCase());
-        if(FuncaoAdmin==null) {
-            throw  new RuntimeException(("Função não pode ser null"));
-        }
+        // em um banco recém-criado as funções ainda não existem: cria em vez de abortar a inicialização
+        var FuncaoAdmin = obterOuCriarFuncao(Funcao.Values.ADMIN.name().toLowerCase());
+        obterOuCriarFuncao(Funcao.Values.USUARIO.name().toLowerCase());
+
         var usuarioAdmin  = repositoryUsuario.findByEmail("admin@admin.com");
       usuarioAdmin.ifPresentOrElse((usuario)-> System.out.println("Usuário admin já existe"), ()-> {
           var usuario = new Usuario();
@@ -37,5 +39,15 @@ public class AdminUserConfig  implements CommandLineRunner {
           repositoryUsuario.save(usuario);
 
       });
+    }
+
+    private Funcao obterOuCriarFuncao(String nome) {
+        var funcao = repositoryFuncao.findByNome(nome);
+        if (funcao != null) {
+            return funcao;
+        }
+        var nova = new Funcao();
+        nova.setNome(nome);
+        return repositoryFuncao.save(nova);
     }
 }

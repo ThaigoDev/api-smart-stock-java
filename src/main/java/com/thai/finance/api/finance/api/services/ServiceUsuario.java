@@ -59,8 +59,8 @@ public class ServiceUsuario {
     }
 
     public void salvar(CriarContaRequisicaoDTO criarContaRequisicaoDTO) {
-        var funcaoBasica = repositoryFuncao.findByNome(Funcao.Values.USUARIO.name());
-        var usuarioDoBanco = repositoryUsuario.findByEmail(criarContaRequisicaoDTO.nome());
+        var funcaoBasica = repositoryFuncao.findByNome(Funcao.Values.USUARIO.name().toLowerCase());
+        var usuarioDoBanco = repositoryUsuario.findByEmail(criarContaRequisicaoDTO.email());
         if (usuarioDoBanco.isPresent()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT);
 
