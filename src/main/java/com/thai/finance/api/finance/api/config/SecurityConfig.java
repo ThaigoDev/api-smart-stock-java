@@ -29,6 +29,13 @@ import java.security.interfaces.RSAPublicKey;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+    // o token carrega as funções do usuário na claim "scope", que o Spring expõe com o prefixo SCOPE_
+    public static final String PERFIL_ADMIN = "SCOPE_admin";
+
+    private static final String[] ROTAS_PUBLICAS = {
+            "/", "/index.html", "/painel/**", "/favicon.ico",
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
+    };
 
     @Value("${jwt.public.key}")
     private RSAPublicKey publicKey;
@@ -39,6 +46,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain (HttpSecurity http, ManipuladorLoginSocial manipuladorLoginSocial) {
        return http.authorizeHttpRequests( authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                // painel web e documentação da API são páginas estáticas; os dados exigem token
+                .requestMatchers(HttpMethod.GET, ROTAS_PUBLICAS).permitAll()
+                // cadastros, alterações, exclusões e estornos: somente administradores
+                .requestMatchers(HttpMethod.POST, "/categorias/**", "/fornecedores/**", "/produtos/**", "/estoques/**",
+                        "/movimentacoesestoque/*/estorno").hasAuthority(PERFIL_ADMIN)
+                .requestMatchers(HttpMethod.PUT, "/**").hasAuthority(PERFIL_ADMIN)
+                .requestMatchers(HttpMethod.DELETE, "/**").hasAuthority(PERFIL_ADMIN)
+                // consultas, relatórios e registro de movimentações: qualquer usuário autenticado
                 .anyRequest().authenticated()
         ).csrf(csrf -> csrf.disable())
                 .oauth2ResourceServer( auth -> auth.jwt(Customizer.withDefaults()))

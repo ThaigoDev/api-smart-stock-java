@@ -5,6 +5,7 @@ import com.thai.finance.api.finance.api.domain.dtos.EstoqueDTO.EstoqueRespostaDT
 import com.thai.finance.api.finance.api.services.ServiceEstoque;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -13,6 +14,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Estoques", description = "Abertura do estoque de um produto e consulta de saldos")
 @RestController
 @RequestMapping("estoques")
 @RequiredArgsConstructor

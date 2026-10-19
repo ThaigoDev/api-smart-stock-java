@@ -34,8 +34,8 @@ import java.util.*;
  * algumas semanas (26 por padrão). Todas as movimentações passam pelo ServiceMovimentacaoEstoque, ou seja, pelas mesmas
  * regras de negócio e transações usadas pela API; as tentativas rejeitadas são contabilizadas no resumo.
  *
- * A simulação é determinística (semente fixa) e o período termina sempre num domingo, de modo que os
- * totais se repetem a cada execução, independentemente do dia em que o seed rodar.
+ * A simulação é determinística (semente fixa): para o mesmo período, os totais se repetem a cada execução.
+ * O período padrão é o do experimento do TCC (ver smartstock.seed.data-fim no application.yaml).
  *
  * Não é @Transactional de propósito: cada movimentação roda em sua própria transação, como na API.
  */

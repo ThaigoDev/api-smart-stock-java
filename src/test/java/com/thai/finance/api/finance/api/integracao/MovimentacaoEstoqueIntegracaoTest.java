@@ -117,8 +117,30 @@ class MovimentacaoEstoqueIntegracaoTest extends ApiTestBase {
 
         obter("/movimentacoesestoque?produto_id=" + produto + "&tipo=SAIDA")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].tipo", everyItem(is("SAIDA"))));
+                .andExpect(jsonPath("$.conteudo", hasSize(2)))
+                .andExpect(jsonPath("$.total_elementos").value(2))
+                .andExpect(jsonPath("$.conteudo[*].tipo", everyItem(is("SAIDA"))));
+    }
+
+    @Test
+    @DisplayName("Listagem paginada traz as mais recentes primeiro e informa o total")
+    void paginacao() throws Exception {
+        String produto = criarProdutoComEstoque(50);
+        for (int i = 1; i <= 5; i++) {
+            movimentar(produto, "SAIDA", i).andExpect(status().isCreated());
+        }
+        // 6 registros: saldo inicial + 5 saídas; a primeira página traz a última saída (5 unidades)
+        obter("/movimentacoesestoque?produto_id=" + produto + "&tamanho=2")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conteudo", hasSize(2)))
+                .andExpect(jsonPath("$.total_elementos").value(6))
+                .andExpect(jsonPath("$.total_paginas").value(3))
+                .andExpect(jsonPath("$.conteudo[0].quantidade").value(5))
+                .andExpect(jsonPath("$.conteudo[1].quantidade").value(4));
+        obter("/movimentacoesestoque?produto_id=" + produto + "&tamanho=2&pagina=2")
+                .andExpect(jsonPath("$.conteudo[1].tipo").value("ENTRADA"));
+        obter("/movimentacoesestoque?tamanho=0").andExpect(status().isBadRequest());
+        obter("/movimentacoesestoque?tamanho=501").andExpect(status().isBadRequest());
     }
 
     @Test
@@ -126,8 +148,7 @@ class MovimentacaoEstoqueIntegracaoTest extends ApiTestBase {
     void historicoImutavel() throws Exception {
         String produto = criarProdutoComEstoque(5);
         String id = campo(movimentar(produto, "ENTRADA", 1), "$.id");
-        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/movimentacoesestoque/" + id)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt()))
+        excluir("/movimentacoesestoque/" + id)
                 .andExpect(status().isMethodNotAllowed());
     }
 }

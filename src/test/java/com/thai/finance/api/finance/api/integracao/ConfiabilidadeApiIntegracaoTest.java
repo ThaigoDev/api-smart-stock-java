@@ -81,7 +81,7 @@ class ConfiabilidadeApiIntegracaoTest extends ApiTestBase {
     @Test
     @DisplayName("JSON sintaticamente inválido retorna 400")
     void jsonInvalido() throws Exception {
-        mvc.perform(post("/movimentacoesestoque").with(jwt()).contentType(MediaType.APPLICATION_JSON).content("{\"produto_id\": "))
+        mvc.perform(post("/movimentacoesestoque").with(comoAdmin()).contentType(MediaType.APPLICATION_JSON).content("{\"produto_id\": "))
                 .andExpect(status().isBadRequest());
     }
 
@@ -104,7 +104,7 @@ class ConfiabilidadeApiIntegracaoTest extends ApiTestBase {
     @DisplayName("Excluir produto com histórico retorna 409 e preserva os dados")
     void exclusaoComVinculos() throws Exception {
         String produto = criarProdutoComEstoque(10);
-        mvc.perform(delete("/produtos/" + produto).with(jwt())).andExpect(status().isConflict());
+        excluir("/produtos/" + produto).andExpect(status().isConflict());
         obter("/produtos/" + produto).andExpect(status().isOk());
     }
 

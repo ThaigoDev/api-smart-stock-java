@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -12,6 +14,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,12 +33,26 @@ abstract class ApiTestBase {
     @Autowired
     protected MockMvc mvc;
 
+    /** Token de administrador: pode cadastrar, alterar, excluir e estornar. */
+    protected static JwtRequestPostProcessor comoAdmin() {
+        return jwt().authorities(new SimpleGrantedAuthority("SCOPE_admin"));
+    }
+
+    /** Token de usuário comum (operador de caixa): consulta e registra movimentações. */
+    protected static JwtRequestPostProcessor comoUsuario() {
+        return jwt().authorities(new SimpleGrantedAuthority("SCOPE_usuario"));
+    }
+
     protected ResultActions postar(String url, String json) throws Exception {
-        return mvc.perform(post(url).with(jwt()).contentType(MediaType.APPLICATION_JSON).content(json));
+        return mvc.perform(post(url).with(comoAdmin()).contentType(MediaType.APPLICATION_JSON).content(json));
     }
 
     protected ResultActions obter(String url) throws Exception {
-        return mvc.perform(get(url).with(jwt()));
+        return mvc.perform(get(url).with(comoAdmin()));
+    }
+
+    protected ResultActions excluir(String url) throws Exception {
+        return mvc.perform(delete(url).with(comoAdmin()));
     }
 
     protected static String campo(ResultActions resultado, String caminho) throws Exception {

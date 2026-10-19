@@ -7,6 +7,7 @@ import com.thai.finance.api.finance.api.services.ServiceMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.services.ServiceProduto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -15,6 +16,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Produtos", description = "Cadastro, pesquisa e extrato (kardex) de produtos")
 @RestController
 @RequestMapping("produtos")
 @RequiredArgsConstructor

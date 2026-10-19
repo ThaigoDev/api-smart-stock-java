@@ -62,7 +62,7 @@ public class ServiceUsuario {
         var funcaoBasica = repositoryFuncao.findByNome(Funcao.Values.USUARIO.name().toLowerCase());
         var usuarioDoBanco = repositoryUsuario.findByEmail(criarContaRequisicaoDTO.email());
         if (usuarioDoBanco.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um usuário com este e-mail");
 
         }
         Usuario usuario = new Usuario();

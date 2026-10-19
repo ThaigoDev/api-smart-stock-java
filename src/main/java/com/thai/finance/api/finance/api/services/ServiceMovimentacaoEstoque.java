@@ -1,6 +1,7 @@
 package com.thai.finance.api.finance.api.services;
 
 import com.thai.finance.api.finance.api.domain.dtos.MovimentacaoEstoqueDTO.MovimentacaoEstoqueRequisicaoDTO;
+import com.thai.finance.api.finance.api.domain.dtos.PaginaDTO;
 import com.thai.finance.api.finance.api.domain.dtos.MovimentacaoEstoqueDTO.MovimentacaoEstoqueRespostaDTO;
 import com.thai.finance.api.finance.api.domain.entities.Estoque;
 import com.thai.finance.api.finance.api.domain.entities.MovimentacaoEstoque;
@@ -14,6 +15,7 @@ import com.thai.finance.api.finance.api.respository.RepositoryMovimentacaoEstoqu
 import com.thai.finance.api.finance.api.respository.RepositoryProduto;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ import java.util.UUID;
 public class ServiceMovimentacaoEstoque {
     // janela usada para estimar a demanda média diária de cada produto
     public static final int JANELA_DEMANDA_DIAS = 30;
+    public static final int TAMANHO_MAXIMO_PAGINA = 500;
 
     private final RepositoryMovimentacaoEstoque repositoryMovimentacaoEstoque;
     private final RepositoryProduto repositoryProduto;
@@ -106,7 +108,12 @@ public class ServiceMovimentacaoEstoque {
     }
 
     @Transactional(readOnly = true)
-    public List<MovimentacaoEstoqueRespostaDTO> obter(UUID produtoId, TipoMovimentacaoEstoque tipo, LocalDate inicio, LocalDate fim) {
+    public PaginaDTO<MovimentacaoEstoqueRespostaDTO> obter(UUID produtoId, TipoMovimentacaoEstoque tipo, LocalDate inicio, LocalDate fim,
+                                                          int pagina, int tamanho) {
+        if (pagina < 0 || tamanho < 1 || tamanho > TAMANHO_MAXIMO_PAGINA) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Use 'pagina' >= 0 e 'tamanho' entre 1 e " + TAMANHO_MAXIMO_PAGINA);
+        }
         Specification<MovimentacaoEstoque> filtro = (root, query, cb) -> {
             List<Predicate> condicoes = new ArrayList<>();
             if (produtoId != null) {
@@ -121,12 +128,14 @@ public class ServiceMovimentacaoEstoque {
             if (fim != null) {
                 condicoes.add(cb.lessThan(root.get("data_movimentacao"), fim.plusDays(1).atStartOfDay()));
             }
+            // mais recentes primeiro; a ordenação é feita aqui porque o Sort do Spring Data não aceita
+            // nomes de atributo com "_" (interpreta como navegação). A consulta de contagem não é ordenada.
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+                query.orderBy(cb.desc(root.get("data_movimentacao")), cb.desc(root.get("sequencia")));
+            }
             return cb.and(condicoes.toArray(new Predicate[0]));
         };
-        return repositoryMovimentacaoEstoque.findAll(filtro).stream()
-                .sorted(Comparator.comparing(MovimentacaoEstoque::getData_movimentacao)
-                        .thenComparing(MovimentacaoEstoque::getSequencia, Comparator.nullsFirst(Comparator.naturalOrder())))
-                .map(mapper::paraDTO).toList();
+        return PaginaDTO.de(repositoryMovimentacaoEstoque.findAll(filtro, PageRequest.of(pagina, tamanho)), mapper::paraDTO);
     }
 
     @Transactional(readOnly = true)

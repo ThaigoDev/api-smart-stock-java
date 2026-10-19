@@ -4,6 +4,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -63,6 +64,11 @@ public class ManipuladorExceptionsGlobal {
     public ResponseEntity<ErrorMensage> handleDataIntegrity(DataIntegrityViolationException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorMensage(409, "Conflict",
                 "Operação viola a integridade dos dados: o registro possui vínculos (ex.: estoque ou movimentações)"));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorMensage> handleCredenciaisInvalidas(BadCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorMensage(401, "Unauthorized", e.getMessage()));
     }
 
     @ExceptionHandler(UsuarioNaoEncontrado.class)

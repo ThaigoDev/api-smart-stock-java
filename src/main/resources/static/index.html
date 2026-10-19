@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Stock - Painel</title>
+<style>
+  :root {
+    --fundo: #f4f6f8; --cartao: #ffffff; --texto: #1d2733; --suave: #5f6b7a; --borda: #dde3ea;
+    --primaria: #1f6feb; --primaria-texto: #ffffff;
+    --ruptura: #c62828; --critico: #e65100; --repor: #b7791f; --normal: #2e7d32; --superestoque: #6a3fb5;
+    --sombra: 0 1px 2px rgba(16, 24, 40, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fundo: #0f1419; --cartao: #182029; --texto: #e6edf3; --suave: #9aa7b4; --borda: #2b3642;
+      --primaria: #4c8dff; --ruptura: #ef5350; --critico: #ff8a3d; --repor: #e0b341; --normal: #57b65b; --superestoque: #a382e8;
+      --sombra: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; background: var(--cartao); border-bottom: 1px solid var(--borda); flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 18px; }
+  header h1 span { color: var(--suave); font-weight: 400; }
+  header nav { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 16px; }
+  .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 10px; padding: 16px 18px; box-shadow: var(--sombra); min-width: 0; }
+  .cartao h2 { margin: 0 0 12px; font-size: 15px; }
+  .grade-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .kpi .rotulo { color: var(--suave); font-size: 13px; }
+  .kpi .valor { font-size: 22px; font-weight: 650; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .duas-colunas { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .duas-colunas { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--borda); white-space: nowrap; }
+  th { color: var(--suave); font-weight: 600; font-size: 12.5px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rolagem { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  .selo { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; }
+  .s-RUPTURA { background: var(--ruptura); } .s-CRITICO { background: var(--critico); } .s-REPOR { background: var(--repor); }
+  .s-NORMAL { background: var(--normal); } .s-SUPERESTOQUE { background: var(--superestoque); }
+  .barra-situacao { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin: 6px 0 10px; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--suave); }
+  .legenda b { color: var(--texto); }
+  .ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  form { display: grid; gap: 10px; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--suave); }
+  input, select, button { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); }
+  button { background: var(--primaria); color: var(--primaria-texto); border: none; cursor: pointer; font-weight: 600; }
+  button.secundario { background: transparent; color: var(--texto); border: 1px solid var(--borda); }
+  .mensagem { padding: 10px 12px; border-radius: 8px; font-size: 14px; display: none; }
+  .mensagem.ok { display: block; background: color-mix(in srgb, var(--normal) 14%, transparent); }
+  .mensagem.erro { display: block; background: color-mix(in srgb, var(--ruptura) 14%, transparent); }
+  #login { max-width: 380px; margin: 10vh auto; }
+  .suave { color: var(--suave); font-size: 13px; }
+  a { color: var(--primaria); }
+  svg text { fill: var(--suave); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<section id="login" class="cartao" hidden>
+  <h2>Smart Stock</h2>
+  <p class="suave">Entre com um usuário cadastrado na API.</p>
+  <form id="form-login">
+    <label>E-mail <input name="email" type="email" required autocomplete="username"></label>
+    <label>Senha <input name="senha" type="password" required autocomplete="current-password"></label>
+    <button type="submit">Entrar</button>
+    <div id="msg-login" class="mensagem"></div>
+  </form>
+  <p class="suave">Documentação da API: <a href="/swagger-ui.html">/swagger-ui.html</a></p>
+</section>
+
+<div id="app" hidden>
+  <header>
+    <h1>Smart Stock <span>· painel de estoque</span></h1>
+    <nav>
+      <label class="suave" style="display:flex;align-items:center;gap:6px">Data de referência
+        <input type="date" id="referencia"></label>
+      <a href="/swagger-ui.html">API</a>
+      <button class="secundario" id="sair">Sair</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="grade-kpi" id="kpis"></section>
+
+    <section class="duas-colunas">
+      <div class="cartao">
+        <h2>Situação dos produtos</h2>
+        <div class="barra-situacao" id="barra-situacao"></div>
+        <div class="legenda" id="legenda-situacao"></div>
+        <h2 style="margin-top:18px">Produtos que exigem atenção</h2>
+        <div class="rolagem">
+          <table>
+            <thead><tr><th>Produto</th><th>Situação</th><th class="num">Saldo</th><th class="num">Mínimo</th>
+              <th class="num">Ponto de pedido</th><th class="num">Cobertura (dias)</th><th class="num">Comprar</th><th class="num">Valor</th></tr></thead>
+            <tbody id="tabela-alertas"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="cartao">
+        <h2>Registrar movimentação</h2>
+        <form id="form-mov">
+          <label>Produto <select name="produto_id" id="sel-produto" required></select></label>
+          <label>Tipo
+            <select name="tipo">
+              <option value="SAIDA">Saída (venda)</option>
+              <option value="ENTRADA">Entrada (recebimento)</option>
+              <option value="DEVOLUCAO">Devolução</option>
+              <option value="AJUSTE">Ajuste de inventário (aceita negativo)</option>
+            </select></label>
+          <label>Quantidade <input name="quantidade" type="number" required value="1"></label>
+          <label>Motivo <input name="motivo" required value="Venda no balcão"></label>
+          <button type="submit">Registrar</button>
+          <div id="msg-mov" class="mensagem"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="duas-colunas">
+      <div class="cartao">
+        <h2>Faturamento mensal</h2>
+        <div id="grafico-mensal"></div>
+      </div>
+      <div class="cartao">
+        <h2>Curva ABC (valor vendido no período)</h2>
+        <table>
+          <thead><tr><th>Classe</th><th class="num">Produtos</th><th class="num">% itens</th><th class="num">% valor</th></tr></thead>
+          <tbody id="tabela-abc"></tbody>
+        </table>
+        <p class="suave" id="abc-periodo"></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const CORES = { RUPTURA: 'var(--ruptura)', CRITICO: 'var(--critico)', REPOR: 'var(--repor)', NORMAL: 'var(--normal)', SUPERESTOQUE: 'var(--superestoque)' };
+const NOMES = { RUPTURA: 'Ruptura', CRITICO: 'Crítico', REPOR: 'Repor', NORMAL: 'Normal', SUPERESTOQUE: 'Superestoque' };
+const reais = v => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const numero = v => v == null ? '—' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = id => document.getElementById(id);
+
+function lerToken() { try { return sessionStorage.getItem('token'); } catch { return null; } }
+function gravarToken(t) { try { t ? sessionStorage.setItem('token', t) : sessionStorage.removeItem('token'); } catch {} }
+
+async function api(caminho, opcoes = {}) {
+  const resp = await fetch(caminho, {
+    ...opcoes,
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + lerToken(), ...(opcoes.headers || {}) }
+  });
+  if (resp.status === 401) { sair(); throw new Error('Sessão expirada'); }
+  const corpo = resp.status === 204 ? null : await resp.json().catch(() => null);
+  if (!resp.ok) {
+    const msg = Array.isArray(corpo) ? corpo.map(e => e.message).join(' ') : (corpo?.message || 'Erro ' + resp.status);
+    const erro = new Error(msg); erro.status = resp.status; throw erro;
+  }
+  return corpo;
+}
+
+function mostrar(el, texto, ok) { el.textContent = texto; el.className = 'mensagem ' + (ok ? 'ok' : 'erro'); }
+
+function sair() { gravarToken(null); $('app').hidden = true; $('login').hidden = false; }
+
+$('form-login').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const dados = Object.fromEntries(new FormData(ev.target));
+  const resp = await fetch('/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+  if (!resp.ok) { mostrar($('msg-login'), 'E-mail ou senha inválidos.', false); return; }
+  gravarToken((await resp.json()).acessToken);
+  iniciar();
+});
+$('sair').addEventListener('click', sair);
+
+function kpi(rotulo, valor) { return `<div class="cartao kpi"><div class="rotulo">${rotulo}</div><div class="valor">${valor}</div></div>`; }
+
+async function carregarPainel() {
+  const ref = $('referencia').value;
+  const inicio = new Date(ref + 'T00:00:00'); inicio.setDate(inicio.getDate() - 179);
+  const ini = inicio.toISOString().slice(0, 10);
+  const [painel, alertas, abc, mensal] = await Promise.all([
+    api('/relatorios/painel?data_referencia=' + ref),
+    api('/relatorios/alertas?data_referencia=' + ref),
+    api(`/relatorios/curva-abc?inicio=${ini}&fim=${ref}`),
+    api(`/relatorios/movimentacoes-mensais?inicio=${ini}&fim=${ref}`)
+  ]);
+
+  $('kpis').innerHTML =
+    kpi('Produtos ativos', numero(painel.produtos_ativos)) +
+    kpi('Valor em estoque', reais(painel.valor_total_em_estoque)) +
+    kpi('Valor em superestoque', reais(painel.valor_em_superestoque)) +
+    kpi('Faturamento (30 dias)', reais(painel.faturamento_ultimos_30_dias)) +
+    kpi('Movimentações (30 dias)', numero(painel.movimentacoes_ultimos_30_dias));
+
+  const total = Object.values(painel.produtos_por_situacao).reduce((a, b) => a + b, 0) || 1;
+  $('barra-situacao').innerHTML = Object.entries(painel.produtos_por_situacao)
+    .filter(([, q]) => q > 0)
+    .map(([s, q]) => `<div title="${NOMES[s]}: ${q}" style="width:${100 * q / total}%;background:${CORES[s]}"></div>`).join('');
+  $('legenda-situacao').innerHTML = Object.entries(painel.produtos_por_situacao)
+    .map(([s, q]) => `<span><span class="ponto" style="background:${CORES[s]}"></span>${NOMES[s]} <b>${q}</b></span>`).join('');
+
+  $('tabela-alertas').innerHTML = alertas.length ? alertas.map(a => `<tr>
+      <td>${esc(a.nome)}</td><td><span class="selo s-${a.situacao}">${NOMES[a.situacao]}</span></td>
+      <td class="num">${numero(a.saldo)}</td><td class="num">${numero(a.estoque_minimo)}</td>
+      <td class="num">${numero(a.ponto_pedido)}</td><td class="num">${numero(a.cobertura_dias)}</td>
+      <td class="num">${a.sugestao_compra ? numero(a.sugestao_compra) : '—'}</td>
+      <td class="num">${a.sugestao_compra ? reais(a.valor_sugestao_compra) : '—'}</td></tr>`).join('')
+    : '<tr><td colspan="8" class="suave">Nenhum produto exige atenção nesta data.</td></tr>';
+
+  $('tabela-abc').innerHTML = abc.resumo_por_classe.map(c => `<tr><td><b>${c.classe}</b></td>
+      <td class="num">${c.quantidade_produtos}</td><td class="num">${numero(c.percentual_produtos)}%</td>
+      <td class="num">${numero(c.percentual_valor)}%</td></tr>`).join('');
+  $('abc-periodo').textContent = `Período: ${abc.inicio} a ${abc.fim} · total vendido ${reais(abc.valor_total_vendido)}`;
+
+  desenharMensal(mensal);
+}
+
+function desenharMensal(meses) {
+  if (!meses.length) { $('grafico-mensal').innerHTML = '<p class="suave">Sem movimentações no período.</p>'; return; }
+  const L = 640, A = 230, m = { e: 64, d: 10, t: 14, b: 28 };
+  const max = Math.max(...meses.map(x => Number(x.faturamento))) || 1;
+  const larg = (L - m.e - m.d) / meses.length;
+  const y = v => m.t + (A - m.t - m.b) * (1 - v / max);
+  const marcas = [0, .25, .5, .75, 1].map(f => {
+    const v = max * f;
+    return `<line x1="${m.e}" x2="${L - m.d}" y1="${y(v)}" y2="${y(v)}" stroke="var(--borda)"/>
+            <text x="${m.e - 6}" y="${y(v) + 4}" text-anchor="end">${(v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil</text>`;
+  }).join('');
+  const barras = meses.map((x, i) => {
+    const h = A - m.b - y(Number(x.faturamento));
+    const [ano, mes] = x.mes.split('-');
+    return `<rect x="${m.e + i * larg + larg * .18}" y="${y(Number(x.faturamento))}" width="${larg * .64}" height="${h}" rx="3" fill="var(--primaria)">
+              <title>${x.mes}: ${reais(x.faturamento)} · ${numero(x.unidades_saida)} unidades vendidas</title></rect>
+            <text x="${m.e + i * larg + larg / 2}" y="${A - 10}" text-anchor="middle">${mes}/${ano.slice(2)}</text>`;
+  }).join('');
+  $('grafico-mensal').innerHTML = `<svg viewBox="0 0 ${L} ${A}" width="100%" role="img" aria-label="Faturamento mensal">${marcas}${barras}</svg>`;
+}
+
+async function carregarProdutos() {
+  const produtos = await api('/produtos');
+  $('sel-produto').innerHTML = produtos.filter(p => p.ativo)
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    .map(p => `<option value="${p.id}">${esc(p.nome)} (${esc(p.sku)})</option>`).join('');
+}
+
+$('form-mov').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const dados = Object.fromEntries(new FormData(ev.target));
+  dados.quantidade = Number(dados.quantidade);
+  try {
+    const r = await api('/movimentacoesestoque', { method: 'POST', body: JSON.stringify(dados) });
+    mostrar($('msg-mov'), `Registrado. Saldo ${r.saldo_anterior} → ${r.saldo_posterior} · situação: ${NOMES[r.situacao_estoque]}.`, true);
+    carregarPainel();
+  } catch (e) {
+    mostrar($('msg-mov'), (e.status ? `Recusado (${e.status}): ` : '') + e.message, false);
+  }
+});
+
+$('referencia').addEventListener('change', carregarPainel);
+
+async function iniciar() {
+  if (!lerToken()) { sair(); return; }
+  $('login').hidden = true; $('app').hidden = false;
+  if (!$('referencia').value) $('referencia').value = new Date().toISOString().slice(0, 10);
+  try { await Promise.all([carregarProdutos(), carregarPainel()]); } catch (e) { console.error(e); }
+}
+iniciar();
+</script>
+</body>
+</html>

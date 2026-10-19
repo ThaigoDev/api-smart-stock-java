@@ -1,0 +1,17 @@
+# Perfil do PostgresIntegracaoTest: a conexão é fornecida pelo Testcontainers (@ServiceConnection),
+# o esquema é criado pelas migrações do Flyway e o Hibernate apenas valida (configuração de produção).
+spring:
+  output:
+    ansi:
+      enabled: NEVER
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: teste
+            client-secret: teste
+
+smartstock:
+  seed:
+    enabled: false

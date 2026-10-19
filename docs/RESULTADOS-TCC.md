@@ -1,6 +1,6 @@
 # Smart Stock: resultados para o TCC
 
-Todos os números abaixo foram medidos em execução real em 13/10/2026. Os arquivos brutos estão em [`docs/resultados/`](resultados/). Eles estão organizados pelas três métricas da Seção 3.3 do TCC (Corretude Funcional, Integridade Transacional e Confiabilidade da API), mais os indicadores gerenciais que o sistema agora calcula.
+Todos os números abaixo foram medidos em execução real (seed, carga e auditoria em 13/10/2026; suíte de testes, cobertura e roteiro Postman atualizados em 19/10/2026). Os arquivos brutos estão em [`docs/resultados/`](resultados/). Eles estão organizados pelas três métricas da Seção 3.3 do TCC (Corretude Funcional, Integridade Transacional e Confiabilidade da API), mais os indicadores gerenciais que o sistema agora calcula.
 
 ---
 
@@ -20,18 +20,24 @@ Todos os números abaixo foram medidos em execução real em 13/10/2026. Os arqu
 | Conciliação automática (saldo = soma do histórico) | `GET /relatorios/conciliacao` | Integridade (ACID) |
 | Transação única por movimentação + lock pessimista (`SELECT ... FOR UPDATE`) + `UNIQUE(produto_id, sequencia)` | `ServiceMovimentacaoEstoque`, `RepositoryEstoque` | "sem avaliação de concorrência" |
 | Novos códigos de erro distintos: 409 (conflito/vínculo), 422 (regra de negócio), 405 (histórico imutável) | `ManipuladorExceptionsGlobal` | Confiabilidade da API |
-| 79 testes automatizados (unidade + integração) | `src/test` | "testes automatizados de unidade e de integração" |
+| 92 testes automatizados (unidade, integração em H2 e em PostgreSQL real via Testcontainers), com cobertura medida pelo JaCoCo | `src/test` | "testes automatizados de unidade e de integração" |
 | Teste de carga e de disputa concorrente | `scripts/teste_carga.py` | "testes de carga para mensurar a escalabilidade" |
+| Autorização por perfil: administrador cadastra, altera, exclui e estorna; usuário consulta e registra movimentações (403 fora do perfil) | `SecurityConfig` | Segurança (antes havia só autenticação) |
+| Listagem de movimentações paginada (mais recentes primeiro, até 500 por página) | `GET /movimentacoesestoque` | Escalabilidade: nenhuma rota devolve o histórico inteiro |
+| Esquema do banco versionado por migrações (Flyway V1 e V2) e validado pelo Hibernate | `src/main/resources/db/migration` | Evolução segura do banco (antes `ddl-auto: update`) |
+| Documentação interativa da API (Swagger / OpenAPI) | `/swagger-ui.html` | Interoperabilidade e demonstração |
+| Painel web: indicadores, alertas, curva ABC, faturamento mensal e registro de movimentações | `/` (src/main/resources/static) | "o sistema não possui interface gráfica" |
+| Ambiente completo com um comando (API + PostgreSQL + seed) | `docker compose --profile app up` | Reprodutibilidade da demonstração |
 
 Destaque de engenharia de software (SOLID): cada `TipoMovimentacaoEstoque` declara o próprio efeito sobre o saldo (`efeitoNoSaldo`). Incluir um novo tipo de movimentação não exige alterar o serviço (Princípio Aberto/Fechado). Os cálculos de indicadores (`PoliticaEstoque`, `CalculadoraCurvaABC`, `CalculadoraGiro`) são classes puras, sem dependência de banco nem de framework. Isso permitiu testá-los isoladamente (Responsabilidade Única).
 
-Correções de defeitos encontradas no caminho: `PUT /produtos` não gravava o preço; a pesquisa de produtos sem categoria retornava 500; o cabeçalho `Location` era montado sem barra (`/produtos<id>`); exclusões e edições de movimentação não revertiam o saldo; a validação devolvia o mesmo campo repetido em todas as mensagens; num banco novo, a aplicação não subia (a tabela `funcao` vazia abortava a inicialização); e o cadastro de usuário procurava duplicidade de e-mail pelo nome.
+Correções de defeitos encontradas no caminho: `PUT /produtos` não gravava o preço; a pesquisa de produtos sem categoria retornava 500; o cabeçalho `Location` era montado sem barra (`/produtos<id>`); exclusões e edições de movimentação não revertiam o saldo; a validação devolvia o mesmo campo repetido em todas as mensagens; num banco novo, a aplicação não subia (a tabela `funcao` vazia abortava a inicialização); e o cadastro de usuário procurava duplicidade de e-mail pelo nome. Na segunda rodada: senha incorreta retornava 500 em vez de 401; e-mail duplicado retornava 422 sem mensagem (agora 409); o teste de inicialização dependia de um PostgreSQL rodando; o perfil de produção tinha `datasouce` (erro de digitação); o Dockerfile anulava as configurações padrão com variáveis vazias e não funcionava a partir de um clone, por falta das chaves JWT; e bancos antigos tinham a restrição de tipo sem `ESTORNO` (corrigido pela migração V2).
 
 ---
 
 ## 2. Cenário experimental (massa de dados sintética)
 
-Um minimercado fictício operando por 26 semanas. Todas as movimentações passam pelo mesmo serviço e pelas mesmas regras da API. A simulação é determinística (semente fixa): duas execuções independentes produziram exatamente os mesmos totais.
+Um minimercado fictício operando por 26 semanas. Todas as movimentações passam pelo mesmo serviço e pelas mesmas regras da API. A simulação é determinística (semente fixa) e o período padrão é fixo: três execuções independentes (duas locais e uma dentro do contêiner Docker, com esquema criado pelo Flyway) produziram exatamente os mesmos totais.
 
 | Item | Valor |
 |---|---|
@@ -66,12 +72,18 @@ Um minimercado fictício operando por 26 semanas. Todas as movimentações passa
 | `CalculadoraCurvaABCTest`: classes A/B/C, fronteiras, período sem vendas | Unidade | 5 | 5 |
 | `CalculadoraGiroTest`: estoque médio e giro | Unidade | 4 | 4 |
 | `ServiceMovimentacaoEstoqueTest`: regras do serviço isoladas do banco | Unidade | 13 | 13 |
-| `MovimentacaoEstoqueIntegracaoTest`: fluxo HTTP de movimentações | Integração | 10 | 10 |
-| `ConfiabilidadeApiIntegracaoTest`: códigos de erro | Integração | 13 | 13 |
-| `RelatorioIntegracaoTest`: indicadores | Integração | 6 | 6 |
-| `TransacaoEConcorrenciaIntegracaoTest`: atomicidade e concorrência | Integração | 3 | 3 |
-| `ApplicationTests`: inicialização do contexto | Integração | 1 | 1 |
-| **Total** | | **79** | **79 (100%)** |
+| `MovimentacaoEstoqueIntegracaoTest`: fluxo HTTP de movimentações, estorno e paginação | Integração (H2) | 11 | 11 |
+| `ConfiabilidadeApiIntegracaoTest`: códigos de erro | Integração (H2) | 13 | 13 |
+| `AutenticacaoIntegracaoTest`: login com JWT real, cadastro de conta, token adulterado | Integração (H2) | 4 | 4 |
+| `AutorizacaoIntegracaoTest`: perfis admin/usuário e rotas públicas | Integração (H2) | 3 | 3 |
+| `RelatorioIntegracaoTest`: indicadores | Integração (H2) | 6 | 6 |
+| `TransacaoEConcorrenciaIntegracaoTest`: atomicidade e concorrência | Integração (H2) | 3 | 3 |
+| `GeradorDeDadosIntegracaoTest`: consistência do cenário gerado pelo seed | Integração (H2) | 1 | 1 |
+| `PostgresIntegracaoTest`: migrações Flyway, concorrência e restrições UNIQUE/CHECK | Integração (PostgreSQL) | 4 | 4 |
+| `ApplicationTests`: inicialização do contexto | Integração (H2) | 1 | 1 |
+| **Total** | | **92** | **92 (100%)** |
+
+Cobertura (JaCoCo, `target/site/jacoco`): **85,4% das linhas, 83,9% dos ramos, 89,1% das instruções**. Por camada: domínio/indicadores 98,6% das linhas; enums 100%; serviços 85,6%; configuração 97,2%. A parte não coberta concentra-se no login social com Google (`security/`, 5,4%), que depende de um provedor externo.
 
 ### 3.2 Regras de negócio verificadas
 
@@ -108,7 +120,8 @@ Valor total em estoque: **R$ 36.733,87**, dos quais **R$ 7.809,72 (21,3%)** est�
 | Verificação | Resultado |
 |---|---|
 | **Atomicidade**: falha forçada na gravação do histórico depois de o saldo já ter sido alterado | Transação inteira desfeita; saldo permaneceu 40 |
-| **Isolamento (H2, teste automatizado)**: 20 saídas simultâneas de 10 un. sobre saldo 100 | Exatamente 10 aprovadas e 10 recusadas; saldo final 0 |
+| **Isolamento (H2 e PostgreSQL via Testcontainers, testes automatizados)**: 20 saídas simultâneas de 10 un. sobre saldo 100 | Exatamente 10 aprovadas e 10 recusadas; saldo final 0, nos dois bancos |
+| **Barreiras no próprio banco (PostgreSQL)**: inserção direta com sequência repetida e com tipo inexistente | Ambas recusadas pelas restrições UNIQUE e CHECK |
 | **Isolamento (H2)**: 25 entradas de 7 e 25 saídas de 3, simultâneas, sobre saldo 1000 | Saldo final exato: 1100 |
 | **Isolamento (PostgreSQL, via HTTP)**: 50 saídas simultâneas de 5 un. sobre saldo 100 | 20 × 201, 30 × 422, saldo final 0 |
 | **Consistência**: conciliação após seed, carga e roteiro Postman | 61/61 produtos consistentes; 0 quebras |
@@ -209,11 +222,11 @@ Entre maio e setembro (meses completos), o faturamento cresceu 8,7%, reproduzind
 
 - Os dados continuam **sintéticos**. A simulação é calibrada, mas não substitui um piloto com uma empresa real.
 - A carga foi medida com **cliente, API e banco na mesma máquina**. Os números servem para comparar níveis de concorrência entre si, não como capacidade de produção.
-- Os testes automatizados usam **H2 em modo PostgreSQL**. A concorrência no PostgreSQL real foi validada pelo script de carga, não pela suíte JUnit.
+- A maior parte dos testes de integração usa **H2 em modo PostgreSQL** (rápido e sem infraestrutura). Migrações, concorrência e restrições também são verificadas no PostgreSQL real (Testcontainers), mas esses 4 testes exigem Docker.
 - O **faturamento usa o preço atual** do produto (não há histórico de preços).
 - A demanda é estimada por **média móvel de 30 dias**, sem tratamento de sazonalidade.
-- O sistema ainda **não tem interface gráfica**.
-- **Atenção ao texto atual do TCC:** os trabalhos futuros citam "implementação de mecanismos de autenticação e autorização", mas a API já exige token JWT em todas as rotas (exceto login), e o roteiro confirma o 401. Vale corrigir esse trecho e citar a autenticação como parte do sistema.
+- A interface gráfica é um **painel web simples** para demonstração; não houve avaliação de usabilidade com usuários.
+- O login social com Google não é coberto por testes automatizados (depende de um provedor externo).
 
 ---
 
@@ -226,7 +239,7 @@ docker exec postgres_api_stock psql -U postgres -c "CREATE DATABASE apistock_tcc
 # 2. subir a API: o seed roda sozinho quando não há produtos (~80 s)
 DATASOURCE_URL=jdbc:postgresql://localhost:5432/apistock_tcc ./mvnw spring-boot:run
 
-# 3. testes automatizados (não precisam do PostgreSQL)
+# 3. testes automatizados e cobertura (os 4 testes de PostgreSQL usam Docker; sem ele, são ignorados)
 ./mvnw test
 
 # 4. roteiro HTTP, carga e auditoria
@@ -235,4 +248,6 @@ py scripts/teste_carga.py --url http://127.0.0.1:8080 --requisicoes 1000
 docker exec -i postgres_api_stock psql -U postgres -d apistock_tcc < docs/consultas-auditoria.sql
 ```
 
-Variáveis do seed: `SEED_ENABLED` (padrão `true`), `SEED_DATA_FIM` (padrão: domingo anterior à data atual) e `SEED_SEMANAS` (padrão `26`). Com o mesmo período, os totais são sempre os mesmos. Mudando o dia de execução, apenas as datas se deslocam.
+Variáveis do seed: `SEED_ENABLED` (padrão `true`), `SEED_DATA_FIM` (padrão `2026-10-11`, o período do experimento) e `SEED_SEMANAS` (padrão `26`). Com o período padrão, toda execução reproduz exatamente os números deste documento. Com outro período, os totais mudam, porque o inventário acontece no último dia de cada mês e desloca a sequência aleatória.
+
+Alternativa com um único comando: `docker compose --profile app up -d --build` sobe banco, API e painel e gera o mesmo cenário no banco `smartstock_demo`.

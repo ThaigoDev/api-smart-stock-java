@@ -6,6 +6,7 @@ import com.thai.finance.api.finance.api.respository.RepositoryFuncao;
 import com.thai.finance.api.finance.api.respository.RepositoryUsuario;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -21,6 +22,12 @@ public class AdminUserConfig  implements CommandLineRunner {
     private final RepositoryUsuario repositoryUsuario;
     private  final BCryptPasswordEncoder passwordEncoder;
 
+    // credenciais do administrador inicial vêm da configuração (variáveis ADMIN_EMAIL e ADMIN_SENHA)
+    @Value("${smartstock.admin.email}")
+    private String emailAdmin;
+    @Value("${smartstock.admin.senha}")
+    private String senhaAdmin;
+
     @Override
     @Transactional
     public void run(String ...args) throws  Exception {
@@ -28,12 +35,12 @@ public class AdminUserConfig  implements CommandLineRunner {
         var FuncaoAdmin = obterOuCriarFuncao(Funcao.Values.ADMIN.name().toLowerCase());
         obterOuCriarFuncao(Funcao.Values.USUARIO.name().toLowerCase());
 
-        var usuarioAdmin  = repositoryUsuario.findByEmail("admin@admin.com");
+        var usuarioAdmin  = repositoryUsuario.findByEmail(emailAdmin);
       usuarioAdmin.ifPresentOrElse((usuario)-> System.out.println("Usuário admin já existe"), ()-> {
           var usuario = new Usuario();
           usuario.setNome("admin");
-          usuario.setEmail("admin@admin.com");
-          usuario.setSenha( passwordEncoder.encode("admin331400"));
+          usuario.setEmail(emailAdmin);
+          usuario.setSenha( passwordEncoder.encode(senhaAdmin));
           usuario.setFuncoes(Set.of(FuncaoAdmin));
 
           repositoryUsuario.save(usuario);

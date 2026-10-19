@@ -4,6 +4,7 @@ import com.thai.finance.api.finance.api.domain.dtos.RelatorioDTO.*;
 import com.thai.finance.api.finance.api.services.ServiceRelatorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Relatórios", description = "Painel, alertas, curva ABC, giro, série mensal e conciliação")
 @RestController
 @RequestMapping("relatorios")
 @RequiredArgsConstructor

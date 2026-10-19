@@ -14,17 +14,26 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # o esquema é criado e evoluído pelo Flyway (src/main/resources/db/migration);
+      # o Hibernate apenas confere se as entidades correspondem às tabelas
+      ddl-auto: validate
     show-sql: ${SHOW_SQL:false}
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    # bancos criados antes do Flyway (pelo antigo ddl-auto: update) são adotados como versão 1
+    baseline-on-migrate: true
+    baseline-version: 1
 
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            # sem as variáveis, a aplicação sobe normalmente e apenas o login com Google fica indisponível
+            client-id: ${GOOGLE_CLIENT_ID:nao-configurado}
+            client-secret: ${GOOGLE_CLIENT_SECRET:nao-configurado}
 
 jwt:
   public:
@@ -35,12 +44,23 @@ jwt:
 server:
   port: ${PORT:8080}
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
 smartstock:
+  admin:
+    # administrador criado na primeira inicialização; em produção as variáveis são obrigatórias
+    email: ${ADMIN_EMAIL:admin@admin.com}
+    senha: ${ADMIN_SENHA:admin331400}
   seed:
     # gera a massa de dados sintética do cenário experimental quando o banco está vazio
     enabled: ${SEED_ENABLED:true}
-    # último dia simulado (AAAA-MM-DD); vazio = domingo anterior à data atual
-    data-fim: ${SEED_DATA_FIM:}
+    # último dia simulado (AAAA-MM-DD). O padrão fixa o período do experimento do TCC
+    # (13/04 a 11/10/2026), para que qualquer execução reproduza exatamente os mesmos números.
+    # Deixe vazio (SEED_DATA_FIM=) para simular as 26 semanas que terminam no domingo anterior à data atual.
+    data-fim: ${SEED_DATA_FIM:2026-10-11}
     semanas: ${SEED_SEMANAS:26}
 
 #PERFIL PRODUÇÃO
@@ -50,7 +70,7 @@ spring:
     activate:
       on-profile: production
 
-  datasouce:
+  datasource:
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
@@ -62,3 +82,10 @@ jwt:
     key: ${PUBLIC_KEY}
   private:
     key: ${PRIVATE_KEY}
+
+smartstock:
+  admin:
+    email: ${ADMIN_EMAIL}
+    senha: ${ADMIN_SENHA}
+  seed:
+    enabled: ${SEED_ENABLED:false}

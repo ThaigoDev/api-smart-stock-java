@@ -5,12 +5,14 @@ import com.thai.finance.api.finance.api.domain.dtos.AuthDTO.LoginRequisicaoDTO;
 import com.thai.finance.api.finance.api.domain.dtos.AuthDTO.LoginRespostaDTO;
 import com.thai.finance.api.finance.api.services.ServiceUsuario;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+@Tag(name = "Autenticação", description = "Login (emite o token JWT) e cadastro de usuários")
 @RestController
 @RequestMapping("/auth")
 public class ControllerAuth {

@@ -1,6 +1,9 @@
+# Somente o banco (desenvolvimento pela IDE):   docker compose up -d
+# Banco + API + painel (demonstração completa):  docker compose --profile app up -d --build
+#   painel: http://localhost:8080   documentação: http://localhost:8080/swagger-ui.html
 services:
-  mysql:
-    image: postgres:latest
+  db:
+    image: postgres:18
     container_name: postgres_api_stock
     environment:
       POSTGRES_DB: apistock
@@ -10,6 +13,44 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # cria o banco da demonstração (separado do apistock usado no desenvolvimento) se ainda não existir
+  db-init:
+    image: postgres:18
+    profiles: ["app"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: postgres
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        psql -h db -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'smartstock_demo'" | grep -q 1
+        || psql -h db -U postgres -c "CREATE DATABASE smartstock_demo"
+
+  api:
+    build: .
+    profiles: ["app"]
+    container_name: smartstock_api
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      DATASOURCE_URL: jdbc:postgresql://db:5432/smartstock_demo
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: postgres
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@admin.com}
+      ADMIN_SENHA: ${ADMIN_SENHA:-admin331400}
+      # no primeiro start o banco está vazio e o cenário experimental é gerado (cerca de 1 a 2 minutos)
+      SEED_ENABLED: "true"
+    ports:
+      - "8080:8080"
 
 volumes:
   postgres_data:

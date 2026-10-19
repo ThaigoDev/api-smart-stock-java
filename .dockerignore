@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+.mvn/
+docs/
+scripts/
+*.iml
+app.key
