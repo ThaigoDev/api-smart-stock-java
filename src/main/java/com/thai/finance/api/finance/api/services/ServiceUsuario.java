@@ -7,6 +7,7 @@ import com.thai.finance.api.finance.api.domain.entities.Funcao;
 import com.thai.finance.api.finance.api.domain.entities.Usuario;
 import com.thai.finance.api.finance.api.respository.RepositoryFuncao;
 import com.thai.finance.api.finance.api.respository.RepositoryUsuario;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,6 +29,9 @@ public class ServiceUsuario {
     private final JwtEncoder jwtEncoder;
     private final RepositoryFuncao repositoryFuncao;
 
+    @Value("${smartstock.jwt.validade-segundos:14400}")
+    private long validadeTokenSegundos;
+
     public ServiceUsuario(RepositoryUsuario repositoryUsuario, BCryptPasswordEncoder passwordEncoder, JwtEncoder jwtEncoder, RepositoryFuncao repositoryFuncao) {
         this.repositoryUsuario = repositoryUsuario;
         this.passwordEncoder = passwordEncoder;
@@ -41,7 +45,7 @@ public class ServiceUsuario {
             throw new BadCredentialsException("Usuário ou senha inválidos");
         }
 
-        var expiraEm = 1000L;
+        var expiraEm = validadeTokenSegundos;
         Instant horarioAtual = Instant.now();
         var scopes = usuario.get().getFuncoes().stream().map(Funcao::getNome).collect(Collectors.joining(" "));
         var claims = JwtClaimsSet.builder().issuer("mybackend")
@@ -51,6 +55,9 @@ public class ServiceUsuario {
                 .expiresAt(horarioAtual.plusSeconds(expiraEm))
                 .issuedAt(horarioAtual)
                 .claim("scope", scopes)
+                // identificação legível: exibida no front-end e gravada na trilha de auditoria
+                .claim("email", usuario.get().getEmail())
+                .claim("nome", usuario.get().getNome())
                 .build();
 
         var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

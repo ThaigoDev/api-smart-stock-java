@@ -33,7 +33,7 @@ public class SecurityConfig {
     public static final String PERFIL_ADMIN = "SCOPE_admin";
 
     private static final String[] ROTAS_PUBLICAS = {
-            "/", "/index.html", "/painel/**", "/favicon.ico",
+            "/", "/index.html", "/assets/**", "/favicon.svg", "/favicon.ico",
             "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"
     };
 
@@ -50,8 +50,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, ROTAS_PUBLICAS).permitAll()
                 // cadastros, alterações, exclusões e estornos: somente administradores
                 .requestMatchers(HttpMethod.POST, "/categorias/**", "/fornecedores/**", "/produtos/**", "/estoques/**",
-                        "/movimentacoesestoque/*/estorno").hasAuthority(PERFIL_ADMIN)
+                        "/movimentacoesestoque/*/estorno", "/pedidos-compra/**").hasAuthority(PERFIL_ADMIN)
                 .requestMatchers(HttpMethod.PUT, "/**").hasAuthority(PERFIL_ADMIN)
+                .requestMatchers(HttpMethod.PATCH, "/**").hasAuthority(PERFIL_ADMIN)
                 .requestMatchers(HttpMethod.DELETE, "/**").hasAuthority(PERFIL_ADMIN)
                 // consultas, relatórios e registro de movimentações: qualquer usuário autenticado
                 .anyRequest().authenticated()

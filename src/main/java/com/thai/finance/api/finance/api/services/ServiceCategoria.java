@@ -34,6 +34,13 @@ public class ServiceCategoria {
                 .toList();
     }
 
+    public CategoriaRespostaDTO atualizar(UUID categoria_id, CategoriaRequisicaoDTO categoriaRequisicaoDTO) {
+        var categoriaEncontrada = repositoryCategoria.findById(categoria_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+        categoriaEncontrada.setNome(categoriaRequisicaoDTO.nome());
+        categoriaEncontrada.setDescricao(categoriaRequisicaoDTO.descricao());
+        return mapper.paraDTO(repositoryCategoria.save(categoriaEncontrada));
+    }
+
     public void remover(UUID categoria_id) {
         var categoriaEncontrada = repositoryCategoria.findById(categoria_id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
         repositoryCategoria.deleteById(categoriaEncontrada.getId());

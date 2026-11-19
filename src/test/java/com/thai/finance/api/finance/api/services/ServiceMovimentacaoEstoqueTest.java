@@ -12,6 +12,7 @@ import com.thai.finance.api.finance.api.mapper.MapperMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryProduto;
+import com.thai.finance.api.finance.api.security.UsuarioAtual;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class ServiceMovimentacaoEstoqueTest {
         repositoryProduto = mock(RepositoryProduto.class);
         repositoryEstoque = mock(RepositoryEstoque.class);
         service = new ServiceMovimentacaoEstoque(repositoryMovimentacao, repositoryProduto, repositoryEstoque,
-                Mappers.getMapper(MapperMovimentacaoEstoque.class));
+                Mappers.getMapper(MapperMovimentacaoEstoque.class), new UsuarioAtual());
 
         produto = new Produto();
         produto.setId(UUID.randomUUID());
@@ -77,6 +78,8 @@ class ServiceMovimentacaoEstoqueTest {
         assertThat(resposta.saldo_anterior()).isEqualTo(50);
         assertThat(resposta.saldo_posterior()).isEqualTo(20);
         assertThat(resposta.situacao_estoque()).isEqualTo(SituacaoEstoque.NORMAL);
+        // sem usuário autenticado, a autoria é atribuída ao sistema
+        assertThat(resposta.registrado_por()).isEqualTo(UsuarioAtual.SISTEMA);
         verify(repositoryEstoque).save(estoque);
         verify(repositoryMovimentacao).save(any(MovimentacaoEstoque.class));
     }

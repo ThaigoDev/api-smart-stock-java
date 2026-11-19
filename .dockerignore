@@ -6,3 +6,4 @@ docs/
 scripts/
 *.iml
 app.key
+frontend/node_modules/

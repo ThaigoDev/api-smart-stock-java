@@ -1,3 +1,15 @@
+# ===== FRONT-END =====
+FROM node:22-alpine AS frontend
+
+WORKDIR /frontend
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY frontend/ ./
+RUN npm run build -- --outDir /static --emptyOutDir
+
+
 # ===== BUILD =====
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 
@@ -7,6 +19,8 @@ COPY pom.xml .
 RUN mvn -q dependency:go-offline
 
 COPY src ./src
+# a interface compilada no estágio anterior substitui a cópia versionada em src/main/resources/static
+COPY --from=frontend /static ./src/main/resources/static
 
 # as chaves que assinam os tokens JWT não são versionadas (.gitignore); se não vierem no contexto
 # do build, gera um par RSA próprio da imagem para que ela funcione a partir de um clone limpo

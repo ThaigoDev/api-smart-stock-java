@@ -2,7 +2,7 @@
 
 API RESTful de controle de estoque para micro e pequenas empresas, desenvolvida com **Java 21**, **Spring Boot 4** e **PostgreSQL** como prova de conceito do TCC *"Engenharia de Software no apoio a PMEs: construção de uma API escalável para controle de estoque"*.
 
-Além dos cadastros, a API impede a geração de estoque negativo, mantém um histórico imutável de movimentações (kardex), sinaliza risco de ruptura e superestoque com sugestão de compra e calcula indicadores gerenciais: ponto de pedido, curva ABC e giro de estoque.
+Além dos cadastros, a API impede a geração de estoque negativo, mantém um histórico imutável e auditável de movimentações (kardex), sinaliza risco de ruptura e superestoque, gera pedidos de compra a partir dos alertas e calcula indicadores gerenciais: ponto de pedido, curva ABC e giro de estoque. Um front-end em React, servido pela própria API, dá acesso a tudo pelo navegador.
 
 ![Arquitetura em camadas do Smart Stock](docs/figuras/arquitetura.png)
 
@@ -34,17 +34,33 @@ Além dos cadastros, a API impede a geração de estoque negativo, mantém um hi
 - O histórico é imutável: não há edição nem exclusão. Erros de lançamento são corrigidos por **estorno**, que preserva o registro original.
 - Atualização do saldo e gravação do histórico ocorrem na mesma transação, com bloqueio do saldo (`SELECT ... FOR UPDATE`) contra vendas simultâneas.
 
+**Pedidos de compra**
+- Geração automática a partir dos alertas: um pedido por fornecedor, com a quantidade para voltar ao estoque máximo. Produtos que já estão em pedido aberto não são pedidos de novo.
+- Criação manual, com validação de fornecedor, itens repetidos e produtos inativos.
+- Recebimento atômico: uma `ENTRADA` por item, todas na mesma transação. Se uma falha, nenhuma é lançada.
+- Cancelamento; pedidos recebidos ou cancelados não mudam mais de estado.
+
 **Alertas e indicadores**
 - Situação de cada produto: ruptura, crítico, repor (atingiu o ponto de pedido), normal ou superestoque.
 - Ponto de pedido calculado: demanda média diária (últimos 30 dias) × prazo de reposição + estoque mínimo.
 - Sugestão de compra em quantidade e valor.
 - Curva ABC pelo valor vendido, giro de estoque, cobertura em dias, painel gerencial e série mensal de faturamento.
+- Posição de estoque: todos os produtos com saldo, situação, cobertura, sugestão de compra e valor.
 - Conciliação: confere se o saldo de cada produto é igual à soma do seu histórico.
+
+**Auditoria:** cada movimentação e cada pedido registram o e-mail de quem os fez (`sistema` para lançamentos automáticos). Produtos são inativados, não excluídos, para preservar o histórico.
 
 **Segurança:** autenticação por token JWT e autorização por perfil. O **administrador** cadastra, altera, exclui e estorna; o **usuário** comum consulta e registra movimentações.
 
 **Interfaces**
-- **Painel web** em `http://localhost:8080`: indicadores, alertas, curva ABC, faturamento mensal e registro de movimentações.
+- **Aplicação web** em `http://localhost:8080` (React + TypeScript), com tema claro e escuro e layout responsivo:
+  - *Visão geral*: indicadores, situação dos produtos, faturamento mensal, mais vendidos e o que precisa de reposição.
+  - *Produtos*: busca, filtros, ordenação, cadastro e edição, inativação e exportação CSV; o detalhe mostra a evolução do saldo e o kardex com estorno.
+  - *Movimentações*: histórico paginado com filtros e registro de novas movimentações, com prévia do saldo resultante.
+  - *Pedidos de compra*: geração a partir dos alertas, criação manual, recebimento e cancelamento.
+  - *Relatórios*: curva ABC, giro por categoria e produto, série mensal e conciliação, todos exportáveis em CSV.
+  - *Cadastros*: categorias e fornecedores.
+  - As ações de administrador ficam ocultas para o perfil de usuário.
 - **Documentação interativa** (Swagger) em `http://localhost:8080/swagger-ui.html`.
 
 ---
@@ -57,6 +73,7 @@ Além dos cadastros, a API impede a geração de estoque negativo, mantém um hi
 | Banco de dados | PostgreSQL 18, migrações versionadas com Flyway |
 | Segurança | Spring Security OAuth2 Resource Server (JWT RS256) |
 | Mapeamento | MapStruct, Lombok |
+| Front-end | React 18, TypeScript, Vite, React Router, Recharts, Lucide |
 | Documentação | springdoc-openapi (Swagger UI) |
 | Testes | JUnit 5, Mockito, MockMvc, H2, Testcontainers, JaCoCo |
 | Testes de API e carga | Postman/Newman, script Python de carga e concorrência |
@@ -109,9 +126,25 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out src/main/resou
 openssl rsa -in src/main/resources/keys/app.key -pubout -out src/main/resources/keys/app.pub
 ```
 
+### Front-end
+
+O código fica em `frontend/`. O build é gerado em `src/main/resources/static/` e servido pela própria API, então não há servidor separado nem configuração de CORS. A imagem Docker compila o front-end automaticamente.
+
+Para desenvolver com recarga automática (a API precisa estar rodando na porta 8080):
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+O endereço de desenvolvimento é http://localhost:5173. Depois de alterar o front-end, gere o build que vai para a API:
+
+```bash
+cd frontend && npm run build
+```
+
 ### Banco de dados e migrações
 
-O esquema é criado e evoluído pelo **Flyway** (`src/main/resources/db/migration`), e o Hibernate apenas valida se as entidades correspondem às tabelas (`ddl-auto: validate`). Bancos criados antes do Flyway são adotados automaticamente como versão 1. Alterações de estrutura devem entrar em um novo arquivo `V3__descricao.sql`, nunca editando um já aplicado.
+O esquema é criado e evoluído pelo **Flyway** (`src/main/resources/db/migration`), e o Hibernate apenas valida se as entidades correspondem às tabelas (`ddl-auto: validate`). Bancos criados antes do Flyway são adotados automaticamente como versão 1. Alterações de estrutura devem entrar em um novo arquivo `V4__descricao.sql`, nunca editando um já aplicado. As migrações atuais são: V1 (esquema inicial), V2 (restrição de tipo com estorno) e V3 (pedidos de compra e autoria das movimentações).
 
 ---
 
@@ -128,10 +161,18 @@ Todas as rotas exigem `Authorization: Bearer <token>`, exceto o login, o cadastr
 | GET / POST / PUT / DELETE | `/produtos` | consulta: todos · alteração: admin | Produtos |
 | GET | `/produtos/pesquisar?nome=&sku=&categoria=` | todos | Pesquisa de produtos |
 | GET | `/produtos/{id}/extrato` | todos | Kardex do produto |
+| PATCH | `/produtos/{id}/status` | admin | Inativa ou reativa o produto (`{"ativo": false}`) |
+| PUT | `/categorias/{id}` | admin | Edita uma categoria |
 | POST | `/estoques` | admin | Abre o estoque do produto com saldo inicial |
 | POST | `/movimentacoesestoque` | todos | Registra entrada, saída, devolução ou ajuste |
 | GET | `/movimentacoesestoque?produto_id=&tipo=&inicio=&fim=&pagina=&tamanho=` | todos | Lista paginada, mais recentes primeiro |
 | POST | `/movimentacoesestoque/{id}/estorno` | admin | Estorna uma movimentação |
+| GET | `/pedidos-compra?status=` | todos | Lista os pedidos de compra |
+| POST | `/pedidos-compra` | admin | Cria um pedido para um fornecedor |
+| POST | `/pedidos-compra/sugestoes` | admin | Gera pedidos a partir dos alertas de reposição |
+| POST | `/pedidos-compra/{id}/recebimento` | admin | Recebe o pedido e lança as entradas no estoque |
+| POST | `/pedidos-compra/{id}/cancelamento` | admin | Cancela o pedido |
+| GET | `/relatorios/posicao-estoque` | todos | Todos os produtos com saldo, situação e indicadores |
 | GET | `/relatorios/painel` | todos | Valor em estoque, situação dos produtos, vendas de 30 dias |
 | GET | `/relatorios/alertas` | todos | Produtos que exigem atenção, com sugestão de compra |
 | GET | `/relatorios/curva-abc?inicio=&fim=` | todos | Curva ABC pelo valor vendido |
@@ -182,7 +223,7 @@ Cada tipo de movimentação declara o próprio efeito sobre o saldo (`TipoMovime
 ./mvnw test
 ```
 
-A suíte tem **92 testes** (JUnit 5): unidade, integração com H2 e integração com **PostgreSQL real via Testcontainers**. Os testes no PostgreSQL são ignorados automaticamente quando o Docker não está disponível. O relatório de cobertura (JaCoCo) fica em `target/site/jacoco/index.html`.
+A suíte tem **102 testes** (JUnit 5): unidade, integração com H2 e integração com **PostgreSQL real via Testcontainers**. Os testes no PostgreSQL são ignorados automaticamente quando o Docker não está disponível. O relatório de cobertura (JaCoCo) fica em `target/site/jacoco/index.html`.
 
 | Suíte | O que verifica |
 |---|---|
@@ -192,11 +233,13 @@ A suíte tem **92 testes** (JUnit 5): unidade, integração com H2 e integraçã
 | `ConfiabilidadeApiIntegracaoTest` | códigos de erro da API |
 | `AutenticacaoIntegracaoTest`, `AutorizacaoIntegracaoTest` | login com JWT real, cadastro de conta, perfis e rotas públicas |
 | `RelatorioIntegracaoTest` | alertas, curva ABC, giro, painel e conciliação |
+| `PedidoCompraIntegracaoTest` | recebimento atômico, sugestões, validações e permissões dos pedidos de compra |
+| `GestaoProdutosIntegracaoTest` | posição de estoque, inativação, edição de categoria e autoria das movimentações |
 | `TransacaoEConcorrenciaIntegracaoTest` | atomicidade e saídas simultâneas |
 | `PostgresIntegracaoTest` | migrações Flyway, concorrência e restrições no PostgreSQL |
 | `GeradorDeDadosIntegracaoTest` | consistência do cenário gerado pelo seed |
 
-Cobertura medida: **85,4% das linhas e 83,9% dos ramos**. A camada de domínio tem 98,6% das linhas cobertas e os serviços, 85,6%.
+Cobertura medida: **87,4% das linhas e 83,9% dos ramos**.
 
 Outras verificações em `docs/` e `scripts/`:
 
@@ -226,6 +269,7 @@ O seed simula um minimercado com 59 produtos durante 26 semanas (15.635 moviment
 src/main/java/.../api
 ├── config/          segurança, OpenAPI, administrador inicial e gerador de dados (seed)
 ├── controllers/     camada de apresentação (REST)
+├── security/        autenticação e identificação do usuário para auditoria
 ├── services/        regras de negócio e transações
 ├── domain/
 │   ├── entities/    entidades JPA
@@ -237,7 +281,11 @@ src/main/java/.../api
 └── exceptions/      tratamento global de erros
 src/main/resources/
 ├── db/migration/    migrações Flyway
-└── static/          painel web
+└── static/          build do front-end (gerado a partir de frontend/)
+frontend/src
+├── pages/           telas (visão geral, produtos, movimentações, pedidos, relatórios, cadastros)
+├── components/      layout, gráficos, formulários e componentes de interface
+└── lib/             cliente da API, sessão, formatação e exportação CSV
 ```
 
 ---

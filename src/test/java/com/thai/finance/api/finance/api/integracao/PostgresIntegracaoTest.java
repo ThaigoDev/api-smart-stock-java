@@ -79,13 +79,14 @@ class PostgresIntegracaoTest {
     }
 
     @Test
-    @DisplayName("Flyway aplica as migrações V1 e V2 e o Hibernate valida o esquema sem divergências")
+    @DisplayName("Flyway aplica as migrações V1 a V3 e o Hibernate valida o esquema sem divergências")
     void migracoesAplicadas() {
         Integer versao = jdbc.queryForObject(
                 "select max(cast(version as integer)) from flyway_schema_history where success", Integer.class);
-        assertThat(versao).isEqualTo(2);
+        assertThat(versao).isEqualTo(3);
         assertThat(jdbc.queryForList("select tablename from pg_tables where schemaname = 'public'", String.class))
-                .contains("produto", "estoque", "movimentacao_estoque", "categoria", "fornecedor", "usuario");
+                .contains("produto", "estoque", "movimentacao_estoque", "categoria", "fornecedor", "usuario",
+                        "pedido_compra", "item_pedido_compra");
     }
 
     @Test

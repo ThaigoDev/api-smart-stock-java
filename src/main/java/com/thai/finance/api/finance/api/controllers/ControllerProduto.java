@@ -2,6 +2,7 @@ package com.thai.finance.api.finance.api.controllers;
 
 import com.thai.finance.api.finance.api.domain.dtos.ProdutoDTO.ProdutoRequisicaoDTO;
 import com.thai.finance.api.finance.api.domain.dtos.ProdutoDTO.ProdutoRespostaDTO;
+import com.thai.finance.api.finance.api.domain.dtos.ProdutoDTO.ProdutoStatusDTO;
 import com.thai.finance.api.finance.api.domain.dtos.MovimentacaoEstoqueDTO.MovimentacaoEstoqueRespostaDTO;
 import com.thai.finance.api.finance.api.services.ServiceMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.services.ServiceProduto;
@@ -58,6 +59,12 @@ public class ControllerProduto {
         serviceProduto.remover(produto_id);
         return ResponseEntity.noContent().build();
 
+    }
+
+    // inativar preserva o histórico: o produto deixa de aceitar movimentações, mas continua nos relatórios
+    @PatchMapping("{id}/status")
+    public ResponseEntity<ProdutoRespostaDTO> alterarStatusProduto(@PathVariable("id") UUID produto_id, @RequestBody @Valid ProdutoStatusDTO produtoStatusDTO) {
+        return ResponseEntity.ok().body(serviceProduto.alterarStatus(produto_id, produtoStatusDTO.ativo()));
     }
 
     @PutMapping("{id}")

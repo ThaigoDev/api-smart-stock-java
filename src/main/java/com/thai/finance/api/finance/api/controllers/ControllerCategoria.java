@@ -37,6 +37,10 @@ public class ControllerCategoria {
         var categorias = serviceCategoria.obter();
         return  ResponseEntity.ok(categorias);
      };
+     @PutMapping("{id}")
+    public ResponseEntity<CategoriaRespostaDTO> atualizarCategoria(@PathVariable("id") UUID categoria_id, @RequestBody @Valid CategoriaRequisicaoDTO categoriaRequisicaoDTO) {
+          return ResponseEntity.ok(serviceCategoria.atualizar(categoria_id, categoriaRequisicaoDTO));
+     }
      @DeleteMapping("{id}")
     public ResponseEntity<Void> removerCategoria(@PathVariable("id") UUID categoria_id) {
           serviceCategoria.remover(categoria_id);

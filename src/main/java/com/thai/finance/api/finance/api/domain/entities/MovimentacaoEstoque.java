@@ -61,6 +61,9 @@ public class MovimentacaoEstoque {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean estornada = false;
 
+    // e-mail do usuário que registrou a movimentação ("sistema" para lançamentos automáticos)
+    private String registrado_por;
+
     // preenchido apenas em movimentações do tipo ESTORNO
     @ManyToOne
     private MovimentacaoEstoque movimentacao_origem;

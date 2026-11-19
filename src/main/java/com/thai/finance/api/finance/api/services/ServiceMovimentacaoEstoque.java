@@ -13,6 +13,7 @@ import com.thai.finance.api.finance.api.mapper.MapperMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryMovimentacaoEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryProduto;
+import com.thai.finance.api.finance.api.security.UsuarioAtual;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +40,7 @@ public class ServiceMovimentacaoEstoque {
     private final RepositoryProduto repositoryProduto;
     private final RepositoryEstoque repositoryEstoque;
     private final MapperMovimentacaoEstoque mapper;
+    private final UsuarioAtual usuarioAtual;
 
     @Transactional
     public MovimentacaoEstoqueRespostaDTO salvar(MovimentacaoEstoqueRequisicaoDTO movimentacaoEstoqueRequisicaoDTO) {
@@ -179,6 +181,7 @@ public class ServiceMovimentacaoEstoque {
         movimentacao.setSaldo_anterior(saldoAnterior);
         movimentacao.setSaldo_posterior(saldoPosterior);
         movimentacao.setSequencia(sequencia);
+        movimentacao.setRegistrado_por(usuarioAtual.identificador());
         return repositoryMovimentacaoEstoque.save(movimentacao);
     }
 

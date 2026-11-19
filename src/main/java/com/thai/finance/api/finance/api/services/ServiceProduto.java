@@ -68,6 +68,12 @@ public class ServiceProduto {
         repositoryProduto.save(produtoEcontrado);
     }
 
+    public ProdutoRespostaDTO alterarStatus(UUID produtoId, boolean ativo) {
+        Produto produto = repositoryProduto.findById(produtoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        produto.setAtivo(ativo);
+        return mapper.paraDTO(repositoryProduto.save(produto));
+    }
+
     public void remover(UUID productId) {
         Produto produtoExist = repositoryProduto.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
         // produto com estoque/histórico viola a chave estrangeira ao confirmar: tratado como 409 no manipulador global

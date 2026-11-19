@@ -11,6 +11,7 @@ import com.thai.finance.api.finance.api.domain.indicadores.CalculadoraGiro;
 import com.thai.finance.api.finance.api.domain.indicadores.PoliticaEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryEstoque;
 import com.thai.finance.api.finance.api.respository.RepositoryMovimentacaoEstoque;
+import com.thai.finance.api.finance.api.respository.RepositoryProduto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class ServiceRelatorio {
 
     private final RepositoryEstoque repositoryEstoque;
     private final RepositoryMovimentacaoEstoque repositoryMovimentacaoEstoque;
+    private final RepositoryProduto repositoryProduto;
 
     // ---------------------------------------------------------------- alertas de ruptura e superestoque
 
@@ -51,27 +53,47 @@ public class ServiceRelatorio {
     }
 
     private List<AlertaEstoqueDTO> situacaoDosProdutos(LocalDate referencia) {
+        return posicao(referencia).stream()
+                .filter(p -> p.ativo() && p.possui_estoque())
+                .map(p -> new AlertaEstoqueDTO(p.produto_id(), p.nome(), p.sku(), p.categoria(), p.saldo(),
+                        p.estoque_minimo(), p.estoque_maximo(), p.ponto_pedido(), p.demanda_media_diaria(),
+                        p.cobertura_dias(), p.situacao(), p.sugestao_compra(),
+                        p.preco().multiply(BigDecimal.valueOf(p.sugestao_compra()))))
+                .toList();
+    }
+
+    // ---------------------------------------------------------------- posição de estoque
+
+    /** Todos os produtos (ativos e inativos, com ou sem estoque aberto) com saldo e indicadores de reposição. */
+    public List<PosicaoProdutoDTO> posicao(LocalDate dataReferencia) {
+        LocalDate referencia = dataReferencia != null ? dataReferencia : LocalDate.now();
         LocalDateTime fimJanela = referencia.plusDays(1).atStartOfDay();
         Map<UUID, Long> vendidoNaJanela = somarPorProduto(TipoMovimentacaoEstoque.SAIDA,
                 fimJanela.minusDays(ServiceMovimentacaoEstoque.JANELA_DEMANDA_DIAS), fimJanela);
-
-        List<AlertaEstoqueDTO> resultado = new ArrayList<>();
+        Map<UUID, Integer> saldoPorProduto = new HashMap<>();
         for (Estoque estoque : repositoryEstoque.buscarTodosComProduto()) {
-            Produto produto = estoque.getProduto();
-            if (!produto.isAtivo()) {
-                continue;
-            }
+            saldoPorProduto.put(estoque.getProduto().getId(), estoque.getQuantidade());
+        }
+
+        List<PosicaoProdutoDTO> resultado = new ArrayList<>();
+        for (Produto produto : repositoryProduto.buscarTodosComCadastros()) {
+            boolean possuiEstoque = saldoPorProduto.containsKey(produto.getId());
+            int saldo = saldoPorProduto.getOrDefault(produto.getId(), 0);
             double demanda = (double) vendidoNaJanela.getOrDefault(produto.getId(), 0L) / ServiceMovimentacaoEstoque.JANELA_DEMANDA_DIAS;
             PoliticaEstoque politica = produto.politicaEstoque();
-            int saldo = estoque.getQuantidade();
-            int sugestao = politica.sugestaoDeCompra(saldo, demanda);
-            resultado.add(new AlertaEstoqueDTO(
-                    produto.getId(), produto.getNome(), produto.getSku(), produto.getCategoria().getNome(),
-                    saldo, politica.estoqueMinimo(), politica.estoqueMaximo(), politica.pontoDePedido(demanda),
-                    arredondar(demanda), arredondar(PoliticaEstoque.coberturaEmDias(saldo, demanda)),
-                    politica.classificar(saldo, demanda), sugestao,
-                    produto.precoEmReais().multiply(BigDecimal.valueOf(sugestao))));
+            resultado.add(new PosicaoProdutoDTO(
+                    produto.getId(), produto.getNome(), produto.getSku(),
+                    produto.getCategoria().getId(), produto.getCategoria().getNome(),
+                    produto.getFornecedor().getId(), produto.getFornecedor().getNome(),
+                    produto.precoEmReais(), produto.isAtivo(), possuiEstoque, saldo,
+                    politica.estoqueMinimo(), politica.estoqueMaximo(), politica.prazoReposicaoDias(),
+                    politica.pontoDePedido(demanda), arredondar(demanda),
+                    possuiEstoque ? arredondar(PoliticaEstoque.coberturaEmDias(saldo, demanda)) : null,
+                    possuiEstoque ? politica.classificar(saldo, demanda) : null,
+                    possuiEstoque ? politica.sugestaoDeCompra(saldo, demanda) : 0,
+                    produto.precoEmReais().multiply(BigDecimal.valueOf(Math.max(saldo, 0)))));
         }
+        resultado.sort(Comparator.comparing(PosicaoProdutoDTO::nome, String.CASE_INSENSITIVE_ORDER));
         return resultado;
     }
 

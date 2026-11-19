@@ -27,6 +27,12 @@ public class ControllerRelatorio {
         return ResponseEntity.ok(serviceRelatorio.painel(dataReferencia));
     }
 
+    @GetMapping("posicao-estoque")
+    public ResponseEntity<List<PosicaoProdutoDTO>> posicaoEstoque(
+            @RequestParam(value = "data_referencia", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataReferencia) {
+        return ResponseEntity.ok(serviceRelatorio.posicao(dataReferencia));
+    }
+
     @GetMapping("alertas")
     public ResponseEntity<List<AlertaEstoqueDTO>> alertas(
             @RequestParam(value = "data_referencia", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataReferencia,
